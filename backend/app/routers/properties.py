@@ -23,14 +23,20 @@ router = APIRouter(
 
 @router.post("/")
 def add_property(property: Property, current_user: str = Depends(verify_token)):
-   create_property(
-     property.title,
-     property.city,
-     property.price,
-     property.image,
-     current_user
-)
-   return {
+    create_property(
+        property.title,
+        property.description,
+        property.city,
+        property.price,
+        property.bedrooms,
+        property.bathrooms,
+        property.area,
+        property.property_type,
+        property.image,
+        current_user
+    )
+
+    return {
         "message": "Property saved successfully!"
     }
 
@@ -57,6 +63,23 @@ def my_properties(
 def search(keyword: str):
 
     return search_properties(keyword)
+@router.get("/public/{property_id}")
+def get_public_property(property_id: int):
+
+    cursor.execute(
+        "SELECT * FROM properties WHERE id = ?",
+        (property_id,)
+    )
+
+    property = cursor.fetchone()
+
+    if property is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Property not found"
+        )
+
+    return dict(property)
 
 @router.get("/{property_id}")
 def get_property(

@@ -15,8 +15,13 @@ cursor.execute("""
 CREATE TABLE IF NOT EXISTS properties (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT,
+    description TEXT,          
     city TEXT,
     price INTEGER,
+    bedrooms INTEGER,
+    bathrooms INTEGER,
+    area INTEGER,
+    property_type TEXT,
     image TEXT,
     owner_email TEXT
 )
@@ -26,6 +31,30 @@ try:
 except:
     pass
 
+try:
+    cursor.execute("ALTER TABLE properties ADD COLUMN description TEXT")
+except:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE properties ADD COLUMN bedrooms INTEGER")
+except:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE properties ADD COLUMN bathrooms INTEGER")
+except:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE properties ADD COLUMN area INTEGER")
+except:
+    pass
+
+try:
+    cursor.execute("ALTER TABLE properties ADD COLUMN property_type TEXT")
+except:
+    pass
 
 # Users table
 cursor.execute("""

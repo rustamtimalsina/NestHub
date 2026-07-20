@@ -1,31 +1,28 @@
 from app.database import cursor, connection
 
 
-def create_property(title, city, price, image, owner_email):
+def create_property(title, description, city, price, bedrooms, bathrooms, area, property_type, image, owner_email):
 
     cursor.execute(
         """
        INSERT INTO properties
-(title, city, price, image, owner_email)
-VALUES (?, ?, ?, ?, ?)
+(title, description, city, price, bedrooms, bathrooms, area, property_type, image, owner_email)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             title,
+            description,
             city,
             price,
+            bedrooms,
+            bathrooms,
+            area,
+            property_type,
             image,
             owner_email
         )
     )
     connection.commit()
-    
-def get_all_properties():
-
-    cursor.execute("SELECT * FROM properties")
-
-    properties = cursor.fetchall()
-
-    return [dict(property) for property in properties]
 
 def get_property_by_id(property_id, current_user):
 
@@ -65,13 +62,26 @@ def update_property(property_id, property, current_user):
     cursor.execute(
         """
         UPDATE properties
-        SET title=?, city=?, price=?
+        SET
+            title=?,
+            description=?,
+            city=?,
+            price=?,
+            bedrooms=?,
+            bathrooms=?,
+            area=?,
+            property_type=?
         WHERE id=?
         """,
         (
             property.title,
+            property.description,
             property.city,
             property.price,
+            property.bedrooms,
+            property.bathrooms,
+            property.area,
+            property.property_type,
             property_id
         )
     )
@@ -152,4 +162,3 @@ def get_my_properties(current_user):
     properties = cursor.fetchall()
 
     return [dict(property) for property in properties]
-    connection.commit()

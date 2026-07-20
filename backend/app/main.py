@@ -5,8 +5,18 @@ from app.routers.properties import router as property_router
 from app.routers.users import router as user_router
 from app.routers.favorites import router as favorites_router
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(property_router)
 app.include_router(user_router)
 app.include_router(favorites_router)

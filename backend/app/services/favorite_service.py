@@ -13,6 +13,23 @@ def add_favorite(user_email, property_id):
             property_id
         )
     )
+    connection.commit()
+def remove_favorite(user_email, property_id):
+
+    cursor.execute(
+        """
+        DELETE FROM favorites
+        WHERE user_email = ?
+        AND property_id = ?
+        """,
+        (
+            user_email,
+            property_id
+        )
+    )
+
+    connection.commit()
+
 
 def get_favorites(user_email):
 
@@ -31,4 +48,21 @@ def get_favorites(user_email):
 
     return [dict(property) for property in favorites]
 
-    connection.commit()
+def is_favorite(user_email, property_id):
+
+    cursor.execute(
+        """
+        SELECT *
+        FROM favorites
+        WHERE user_email = ?
+        AND property_id = ?
+        """,
+        (
+            user_email,
+            property_id
+        )
+    )
+
+    favorite = cursor.fetchone()
+
+    return favorite is not None
