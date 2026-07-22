@@ -25,14 +25,15 @@ def create_user(user: User):
 
     cursor.execute(
         """
-        INSERT INTO users
-        (name, email, password, role)
+       INSERT INTO users
+(name, email, phone, password, role)
 
-        VALUES (?, ?, ?, ?)
+VALUES (?, ?, ?, ?, ?)
         """,
         (
             user.name,
             user.email,
+            user.phone,
             hashed_password,
             user.role
         )

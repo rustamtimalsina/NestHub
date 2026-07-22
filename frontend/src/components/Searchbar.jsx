@@ -11,19 +11,23 @@ function SearchBar() {
   }
 };
   return (
-    <section className="bg-white py-10 shadow-sm">
-      <div className="max-w-5xl mx-auto px-6">
+    <section className="max-w-5xl mx-auto px-6">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
 
-        <h2 className="text-3xl font-bold text-center mb-8">
-          Search Properties
-        </h2>
+       <h2 className="text-4xl font-bold text-center mb-3">
+  Find Your Dream Property
+</h2>
+
+<p className="text-center text-gray-500 mb-8">
+  Search thousands of verified properties across Nepal.
+</p>
 
         <form
   onSubmit={(e) => {
     e.preventDefault();
     handleSearch();
   }}
-  className="flex gap-4"
+  className="flex flex-col md:flex-row gap-4"
 >
    <input
   type="text"
@@ -36,11 +40,11 @@ function SearchBar() {
       handleSearch();
     }
   }}
-  className="flex-1 border border-gray-300 rounded-lg px-4 py-3 outline-none focus:border-blue-600"
+ className="flex-1 rounded-2xl border border-gray-200 bg-gray-50 px-6 py-4 text-lg outline-none transition-all duration-300 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
 />
  <button
   type="submit"
-  className="bg-blue-600 text-white px-8 rounded-lg hover:bg-blue-700"
+ className="bg-blue-600 hover:bg-blue-700 text-white px-10 rounded-2xl font-semibold shadow-lg transition-all duration-300 hover:scale-105"
 >
   Search
 </button>

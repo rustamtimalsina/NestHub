@@ -32,6 +32,11 @@ except:
     pass
 
 try:
+    cursor.execute("ALTER TABLE users ADD COLUMN phone TEXT")
+except:
+    pass
+
+try:
     cursor.execute("ALTER TABLE properties ADD COLUMN description TEXT")
 except:
     pass
@@ -65,6 +70,8 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT NOT NULL,
 
     email TEXT UNIQUE NOT NULL,
+
+    phone TEXT,
 
     password TEXT NOT NULL,
 

@@ -175,7 +175,7 @@ return (
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
     <p className="text-gray-700 font-medium">👤 Owner</p>
     <p className="text-lg font-semibold mt-2 break-all">
-      {property.owner_email}
+      {property.owner_name}
     </p>
   </div>
 
@@ -228,40 +228,82 @@ return (
               </p>
             </div>
 
-            <div>
-              <p className="text-gray-500 text-sm">
-                Owner Email
-              </p>
+          <div className="space-y-4">
 
-              <p className="font-semibold break-all">
-                {property.owner_email}
-              </p>
-            </div>
+  <div>
+    <p className="text-gray-500 text-sm">
+      Owner Name
+    </p>
+
+    <p className="font-semibold text-lg">
+      {property.owner_name}
+    </p>
+  </div>
+
+  <div>
+    <p className="text-gray-500 text-sm">
+      Email
+    </p>
+
+    <p className="font-semibold break-all">
+      {property.owner_email}
+    </p>
+  </div>
+
+  <div>
+    <p className="text-gray-500 text-sm">
+      Phone
+    </p>
+
+    <p className="font-semibold">
+      {property.owner_phone || "Not Available"}
+    </p>
+  </div>
+
+</div>
 
           </div>
 
-          <div className="flex gap-3 mt-8">
+         <div className="grid grid-cols-3 gap-3 mt-8">
 
-     <button
-  onClick={() =>
-    window.open(
-      `https://mail.google.com/mail/?view=cm&fs=1&to=${property.owner_email}`,
-      "_blank"
-    )
-  }
-  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-center font-semibold transition"
->
-  📧 Send Email
-</button>
+  {property.owner_phone && (
+    <>
+      <button
+        onClick={() => window.open(`tel:${property.owner_phone}`)}
+        className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition"
+      >
+        📞 Call
+      </button>
 
-            <button
-              onClick={() => navigator.clipboard.writeText(property.owner_email)}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 py-3 rounded-xl font-semibold transition"
-            >
-              📋 Copy Email
-            </button>
+      <button
+        onClick={() =>
+          window.open(
+            `https://wa.me/977${property.owner_phone}`,
+            "_blank"
+          )
+        }
+        className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold transition"
+      >
+        💬 WhatsApp
+      </button>
+    </>
+  )}
 
-          </div>
+  <button
+    onClick={() =>
+      window.open(
+        `https://mail.google.com/mail/?view=cm&fs=1&to=${property.owner_email}&su=${encodeURIComponent(
+          `Inquiry about ${property.title}`
+        )}`,
+        "_blank"
+      )
+    }
+    className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition"
+  >
+    📧 Email
+  </button>
+
+</div>
 
           <button
             onClick={() => setShowContact(false)}

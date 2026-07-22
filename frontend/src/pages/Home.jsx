@@ -4,11 +4,15 @@ import FeaturedProperties from "../components/FeaturedProperties";
 
 function Home() {
   return (
-    <>
-      <Hero />
-      <SearchBar />
-       <FeaturedProperties />
-    </>
+   <>
+  <Hero />
+
+  <div className="-mt-16 relative z-20">
+    <SearchBar />
+  </div>
+
+  <FeaturedProperties />
+</>
   );
 }
 

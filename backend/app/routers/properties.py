@@ -67,7 +67,16 @@ def search(keyword: str):
 def get_public_property(property_id: int):
 
     cursor.execute(
-        "SELECT * FROM properties WHERE id = ?",
+        """
+        SELECT
+            properties.*,
+            users.name AS owner_name,
+            users.phone AS owner_phone
+        FROM properties
+        JOIN users
+            ON properties.owner_email = users.email
+        WHERE properties.id = ?
+        """,
         (property_id,)
     )
 
@@ -82,14 +91,8 @@ def get_public_property(property_id: int):
     return dict(property)
 
 @router.get("/{property_id}")
-def get_property(
-    property_id: int,
-    current_user: str = Depends(verify_token)
-):
-    prop = get_property_by_id(
-        property_id,
-        current_user
-    )
+def get_property(property_id: int):
+    prop = get_property_by_id(property_id)
 
     if prop is None:
         raise HTTPException(

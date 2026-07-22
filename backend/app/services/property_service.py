@@ -24,17 +24,20 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     )
     connection.commit()
 
-def get_property_by_id(property_id, current_user):
+def get_property_by_id(property_id):
 
     cursor.execute(
         """
-        SELECT * FROM properties
-        WHERE id = ? AND owner_email = ?
+        SELECT
+            properties.*,
+            users.name AS owner_name,
+            users.phone AS owner_phone
+        FROM properties
+        JOIN users
+            ON properties.owner_email = users.email
+        WHERE properties.id = ?
         """,
-        (
-            property_id,
-            current_user
-        )
+        (property_id,)
     )
 
     property = cursor.fetchone()

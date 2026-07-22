@@ -7,8 +7,9 @@ function Register() {
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+ const [email, setEmail] = useState("");
+const [phone, setPhone] = useState("");
+const [password, setPassword] = useState("");
 
   async function handleRegister(e) {
     e.preventDefault();
@@ -17,6 +18,7 @@ function Register() {
       await registerUser({
         name,
         email,
+        phone,
         password,
         role: "user",
       });
@@ -68,6 +70,13 @@ function Register() {
           className="w-full border border-gray-300 p-3 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          type="text"
+          placeholder="Phone"
+          className="w-full border border-gray-300 p-3 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
         />
 
         <input

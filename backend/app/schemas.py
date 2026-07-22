@@ -14,6 +14,7 @@ class Property(BaseModel):
 class User(BaseModel):
     name: str
     email: str
+    phone: str
     password: str
     role: str
 
