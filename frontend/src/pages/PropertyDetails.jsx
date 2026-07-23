@@ -6,6 +6,19 @@ import {
   removeFavorite,
   checkFavorite
 } from "../services/propertyService";
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  Ruler,
+  Home,
+  User,
+  Phone,
+  Mail,
+  Heart,
+  FileText,
+  MessageCircle,
+} from "lucide-react";
 
 function PropertyDetails() {
   const { id } = useParams();
@@ -69,9 +82,10 @@ async function handleFavorite() {
   }
 
 return (
-  <div className="max-w-6xl mx-auto py-12 px-6">
+  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 py-12">
+  <div className="max-w-6xl mx-auto px-6">
 
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+    <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100">
 
       <img
         src={
@@ -80,7 +94,7 @@ return (
             : "https://placehold.co/1200x600?text=No+Image"
         }
         alt={property.title}
-        className="w-full h-[400px] object-cover"
+        className="w-full h-[520px] object-cover transition duration-700 hover:scale-105"
       />
 
       <div className="p-8">
@@ -93,13 +107,14 @@ return (
       {property.property_type}
     </span>
 
-    <h1 className="text-4xl font-bold">
+   <h1 className="text-5xl font-black text-slate-800">
       {property.title}
     </h1>
 
-    <p className="text-gray-500 text-lg mt-2">
-      📍 {property.city}
-    </p>
+   <p className="text-gray-500 text-lg mt-2 flex items-center gap-2">
+  <MapPin size={20} className="text-blue-600" />
+  {property.city}
+</p>
 
   </div>
 
@@ -109,7 +124,7 @@ return (
       Price
     </p>
 
-    <h2 className="text-5xl font-extrabold text-blue-600">
+    <h2 className="text-6xl font-black text-blue-600 tracking-tight">
       Rs. {Number(property.price).toLocaleString()}
     </h2>
 
@@ -120,12 +135,11 @@ return (
         <hr className="my-8" />
 
 <div className="mb-8">
-
-  <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-  📄 Description
+<h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+  <FileText className="text-blue-600" />
+  Description
 </h2>
-
-  <p className="text-gray-700 leading-8 bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
+  <p className="text-gray-700 leading-8 bg-gradient-to-br from-white to-slate-50 border border-gray-100 p-8 rounded-3xl shadow-lg">
   {property.description || "No description available."}
 </p>
 
@@ -138,42 +152,60 @@ return (
 <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="text-gray-700 font-medium">🛏 Bedrooms</p>
+   <p className="flex items-center gap-2 text-gray-700 font-medium">
+  <BedDouble size={18} className="text-blue-600" />
+  Bedrooms
+</p>
     <p className="text-2xl font-bold mt-2">
       {property.bedrooms}
     </p>
   </div>
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="text-gray-700 font-medium">🛁 Bathrooms</p>
+    <p className="flex items-center gap-2 text-gray-700 font-medium">
+  <Bath size={18} className="text-blue-600" />
+  Bathrooms
+</p>
     <p className="text-2xl font-bold mt-2">
       {property.bathrooms}
     </p>
   </div>
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="text-gray-700 font-medium">📐 Area</p>
+    <p className="flex items-center gap-2 text-gray-700 font-medium">
+  <Ruler size={18} className="text-blue-600" />
+  Area
+</p>
     <p className="text-2xl font-bold mt-2">
       {property.area} sq.ft
     </p>
   </div>
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="text-gray-700 font-medium">🏠 Property Type</p>
+   <p className="flex items-center gap-2 text-gray-700 font-medium">
+  <Home size={18} className="text-blue-600" />
+  Property Type
+</p>
     <p className="text-xl font-semibold mt-2">
       {property.property_type}
     </p>
   </div>
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="text-gray-700 font-medium">📍 City</p>
+   <p className="flex items-center gap-2 text-gray-700 font-medium">
+  <MapPin size={18} className="text-blue-600" />
+  City
+</p>
     <p className="text-xl font-semibold mt-2">
       {property.city}
     </p>
   </div>
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="text-gray-700 font-medium">👤 Owner</p>
+    <p className="flex items-center gap-2 text-gray-700 font-medium">
+  <User size={18} className="text-blue-600" />
+  Owner
+</p>
     <p className="text-lg font-semibold mt-2 break-all">
       {property.owner_name}
     </p>
@@ -190,15 +222,21 @@ return (
       : "bg-blue-600 hover:bg-blue-700"
    }`}
 >
+  <span className="flex items-center justify-center gap-2">
+  <Heart size={20} fill={isFavorite ? "white" : "none"} />
   {isFavorite
-    ? "❤️ Remove from Favorites"
-    : "🤍 Add to Favorites"}
+    ? "Remove from Favorites"
+    : "Add to Favorites"}
+</span>
 </button>
           <button
   onClick={() => setShowContact(true)}
   className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition"
 >
-  📞 Contact Owner
+  <span className="flex items-center justify-center gap-2">
+  <Phone size={20} />
+  Contact Owner
+</span>
 </button>
 
         </div>
@@ -318,6 +356,7 @@ return (
     )}
 
   </div>
+      </div>
 );
 }
 export default PropertyDetails;

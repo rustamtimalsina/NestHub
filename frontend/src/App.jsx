@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar";
 import PropertyDetails from "./pages/PropertyDetails";
 import EditProperty from "./pages/EditProperty";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Footer from "./components/Footer";
 
 
 function App() {
@@ -56,6 +57,7 @@ function App() {
   }
 />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }

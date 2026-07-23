@@ -1,4 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
+import {
+  House,
+  Building2,
+  Heart,
+  PlusSquare,
+  CircleUserRound,
+  LogOut,
+} from "lucide-react";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -18,7 +26,7 @@ function Navbar() {
   to="/"
   className="flex items-center gap-2 text-3xl font-extrabold text-blue-600 tracking-tight hover:scale-105 transition"
 >
-  🏡
+   <House size={32} />
   <span>NestHub</span>
 </Link>
 
@@ -44,28 +52,50 @@ function Navbar() {
   to="/favorites"
   className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
 >
-   ❤️ Favorites
+   <div className="flex items-center gap-2">
+    <Heart size={18} />
+    Favorites
+</div>
 </Link>
 
               <Link
   to="/my-properties"
   className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
 >
-  🏠 My Properties
+  <div className="flex items-center gap-2">
+    <Building2 size={18} />
+    My Properties
+</div>
 </Link>
 
               <Link
   to="/add-property"
   className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
 >
-  📝 Add Property
+  <div className="flex items-center gap-2">
+    <PlusSquare size={18} />
+    Add Property
+</div>
 </Link>
+<div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-xl">
+    <CircleUserRound
+        size={22}
+        className="text-blue-600"
+    />
+
+    <span>
+        User
+    </span>
+</div>
 
               <button
                 onClick={handleLogout}
                className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl transition"
               >
-                Logout
+               <div className="flex items-center gap-2">
+    <LogOut size={18} />
+    Logout
+</div>
               </button>
             </>
           )}
@@ -74,7 +104,7 @@ function Navbar() {
             <>
               <Link
   to="/login"
-  className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
+  className="px-4 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition"
 >
   Login
 </Link>

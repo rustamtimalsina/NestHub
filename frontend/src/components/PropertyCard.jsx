@@ -6,9 +6,17 @@ import {
   Ruler,
   Home,
 } from "lucide-react";
+import { motion } from "framer-motion";
 function PropertyCard({ property }) {
   return (
-    <div className="group bg-white rounded-3xl shadow-md overflow-hidden border border-gray-100 hover:shadow-2xl hover:-translate-y-3 transition-all duration-500">
+   <motion.div
+  initial={{ opacity: 0, y: 40 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.5 }}
+  whileHover={{ y: -8 }}
+  className="group bg-white rounded-3xl shadow-md overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-500"
+>
 <div className="relative">
 
  <img
@@ -63,17 +71,21 @@ function PropertyCard({ property }) {
 <p className="text-blue-600 font-extrabold text-3xl mt-5">
   Rs. {Number(property.price).toLocaleString()}
 </p>
-
-      <Link
-  to={`/properties/${property.id}`}
-className="block mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl text-center font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+<motion.div
+  whileHover={{ scale: 1.03 }}
+  whileTap={{ scale: 0.97 }}
 >
-  View Details
-</Link>
+  <Link
+    to={`/properties/${property.id}`}
+    className="block mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-2xl text-center font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+  >
+    View Details
+  </Link>
+</motion.div>
 
       </div>
 
-    </div>
+   </motion.div>
   );
 }
 

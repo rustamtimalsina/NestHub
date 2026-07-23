@@ -1,13 +1,24 @@
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 
 function Hero() {
     const navigate = useNavigate();
   return (
-    <section className="relative min-h-[90vh] bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden">
+   <motion.section
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.8 }}
+  className="relative min-h-[90vh] bg-gradient-to-br from-blue-50 via-white to-blue-100 overflow-hidden"
+>
       <div className="max-w-7xl mx-auto px-8 py-28 flex flex-col-reverse md:flex-row items-center justify-between gap-16">
 
         {/* Left Side */}
-        <div className="md:w-1/2">
+        <motion.div
+  className="md:w-1/2"
+  initial={{ opacity: 0, x: -80 }}
+  animate={{ opacity: 1, x: 0 }}
+  transition={{ duration: 0.8, delay: 0.2 }}
+>
 
           <h1 className="text-6xl md:text-7xl font-black leading-tight tracking-tight">
             Find Your
@@ -19,16 +30,24 @@ function Hero() {
             Buy, rent, and sell with confidence.
           </p>
 
-         <button
+     <motion.button
   onClick={() => navigate("/properties")}
- className="mt-10 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl text-lg font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+  className="mt-10 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl text-lg font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
 >
   Explore Properties
-</button>
-        </div>
+</motion.button>
+
+       </motion.div>
 
         {/* Right Side */}
-       <div className="md:w-1/2 flex justify-center mt-10 md:mt-0">
+       <motion.div
+  className="md:w-1/2 flex justify-center mt-10 md:mt-0"
+  initial={{ opacity: 0, x: 80, scale: 0.9 }}
+  animate={{ opacity: 1, x: 0, scale: 1 }}
+  transition={{ duration: 0.9, delay: 0.3 }}
+>
 
   <div className="relative">
 
@@ -48,12 +67,13 @@ function Hero() {
       <h2 className="text-2xl font-bold">⭐ 4.9</h2>
     </div>
 
-  </div>
+  
 
 </div>
+</motion.div>
 
       </div>
-    </section>
+    </motion.section>
   );
 }
 
