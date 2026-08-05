@@ -10,9 +10,11 @@ function Login() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleLogin(e) {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const data = await loginUser(email, password);
@@ -20,12 +22,14 @@ function Login() {
       localStorage.setItem("token", data.access_token);
 
   toast.success("Welcome back!");
-
+setLoading(false);
 setTimeout(() => {
+
   navigate("/");
   window.location.reload();
 }, 1000);
     } catch (error) {
+      setLoading(false);
       toast.error("Invalid email or password.");
       console.error(error);
     }
@@ -114,15 +118,26 @@ setTimeout(() => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <p
+  onClick={() => navigate("/forgot-password")}
+  className="text-right text-blue-600 cursor-pointer hover:underline mb-6"
+>
+  Forgot Password?
+</p>
 
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold shadow-lg transition"
-          >
-            Login
-          </motion.button>
+         <motion.button
+  whileHover={!loading ? { scale: 1.03 } : {}}
+  whileTap={!loading ? { scale: 0.97 } : {}}
+  type="submit"
+  disabled={loading}
+  className={`w-full py-4 rounded-2xl font-bold shadow-lg transition text-white ${
+    loading
+      ? "bg-blue-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700"
+  }`}
+>
+  {loading ? "Logging in..." : "Login"}
+</motion.button>
 
           <p className="text-center mt-8 text-gray-600">
 

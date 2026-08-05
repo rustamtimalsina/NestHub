@@ -6,6 +6,7 @@ from app.routers.users import router as user_router
 from app.routers.favorites import router as favorites_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
 
 app = FastAPI()
 app.add_middleware(
@@ -20,7 +21,9 @@ app.add_middleware(
 app.include_router(property_router)
 app.include_router(user_router)
 app.include_router(favorites_router)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
+uploads_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 print("Database connected successfully!")
 

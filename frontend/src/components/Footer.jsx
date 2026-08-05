@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaLinkedinIn, FaGithub } from "react-icons/fa";
 import { HiHome, HiMail } from "react-icons/hi";
 import { motion } from "framer-motion";

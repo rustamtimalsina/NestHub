@@ -9,7 +9,8 @@ class Property(BaseModel):
     bathrooms: int = Field(..., ge=0)
     area: int = Field(..., gt=0)
     property_type: str = Field(..., max_length=50)
-    image: str
+    status: str = "Available"   # ← Add this line
+    image: str = Field(..., min_length=1, max_length=255)
 
 class User(BaseModel):
     name: str
@@ -21,3 +22,7 @@ class User(BaseModel):
 class UserLogin(BaseModel):
     email: str
     password: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str = Field(..., min_length=8, max_length=128)

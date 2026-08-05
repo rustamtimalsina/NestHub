@@ -26,17 +26,31 @@ function PropertyCard({ property }) {
       : "https://placehold.co/600x400?text=No+Image"
   }
   alt={property.title}
-  className="w-full h-60 object-cover transition-transform duration-500 group-hover:scale-110"
+ className="w-full h-52 sm:h-60 object-cover transition-transform duration-500 group-hover:scale-110"
 />
 
   <span className="absolute top-4 right-4 bg-blue-600 text-white text-sm font-semibold px-4 py-1 rounded-full shadow-lg">
     {property.property_type}
   </span>
+  <span
+  className={`absolute top-4 left-4 text-white text-sm font-semibold px-4 py-1 rounded-full shadow-lg
+    ${
+      property.status === "Available"
+        ? "bg-green-600"
+        : property.status === "Sold"
+        ? "bg-red-600"
+        : property.status === "Rented"
+        ? "bg-blue-600"
+        : "bg-yellow-500"
+    }`}
+>
+  {property.status}
+</span>
 
 </div>
       <div className="p-5">
 
-        <h3 className="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition">
           {property.title}
         </h3>
 
@@ -68,11 +82,11 @@ function PropertyCard({ property }) {
 
 </div>
 
-<p className="text-blue-600 font-extrabold text-3xl mt-5">
+<p className="text-blue-600 font-extrabold text-2xl sm:text-3xl mt-5">
   Rs. {Number(property.price).toLocaleString()}
 </p>
 <motion.div
-  whileHover={{ scale: 1.03 }}
+  whileHover={{ scale: 1.02 }}
   whileTap={{ scale: 0.97 }}
 >
   <Link

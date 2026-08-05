@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   getPropertyById,
+  getPropertyImages,
+  getSimilarProperties,
   addFavorite,
   removeFavorite,
   checkFavorite
@@ -14,11 +16,10 @@ import {
   Home,
   User,
   Phone,
-  Mail,
   Heart,
   FileText,
-  MessageCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 function PropertyDetails() {
   const { id } = useParams();
@@ -26,26 +27,48 @@ function PropertyDetails() {
   const [property, setProperty] = useState(null);
  const [isFavorite, setIsFavorite] = useState(false);
 const [showContact, setShowContact] = useState(false);
-  useEffect(() => {
-    loadProperty();
-  }, []);
+const [similarProperties, setSimilarProperties] = useState([]);
+const [images, setImages] = useState([]);
+const [selectedImage, setSelectedImage] = useState("");
+useEffect(() => {
+    let active = true;
 
-async function loadProperty() {
-  try {
-    const data = await getPropertyById(id);
-    setProperty(data);
+    async function loadProperty() {
+      try {
+        const data = await getPropertyById(id);
+        if (!active) return;
+        setProperty(data);
+       const propertyImages = await getPropertyImages(id);
 
-    try {
-      const favorite = await checkFavorite(id);
-      setIsFavorite(favorite);
-    } catch (error) {
-      // User may not be logged in, so just ignore this.
+if (active) {
+ const filteredImages = propertyImages.filter(
+  (img) => img.image !== data.image
+);
+
+setImages(filteredImages);
+
+setSelectedImage(data.image); 
+  }  const similar = await getSimilarProperties(id);
+if (active) {
+  setSimilarProperties(similar);
+}
+
+        try {
+          const favorite = await checkFavorite(id);
+          if (active) setIsFavorite(favorite);
+        } catch {
+          // Guests are allowed to view the property without favorite status.
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
 
-  } catch (error) {
-    console.error(error);
-  }
-}
+    loadProperty();
+    return () => {
+      active = false;
+    };
+  }, [id]);
 async function handleFavorite() {
   try {
     if (isFavorite) {
@@ -88,14 +111,50 @@ return (
     <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100">
 
       <img
-        src={
-          property.image
-            ? `http://localhost:8000/uploads/${property.image}`
-            : "https://placehold.co/1200x600?text=No+Image"
-        }
+       src={
+  selectedImage
+    ? `http://localhost:8000/uploads/${selectedImage}`
+    : property.image
+    ? `http://localhost:8000/uploads/${property.image}`
+    : "https://placehold.co/1200x600?text=No+Image"
+}
         alt={property.title}
         className="w-full h-[520px] object-cover transition duration-700 hover:scale-105"
       />
+     {(property.image || images.length > 0) && (
+  <div className="flex gap-3 overflow-x-auto p-4 bg-gray-50">
+
+    {/* Cover Image */}
+    {property.image && (
+      <img
+        src={`http://localhost:8000/uploads/${property.image}`}
+        alt="Cover"
+        onClick={() => setSelectedImage(property.image)}
+        className={`w-28 h-20 rounded-lg object-cover cursor-pointer border-4 transition ${
+          selectedImage === property.image
+            ? "border-blue-600"
+            : "border-transparent hover:border-blue-300"
+        }`}
+      />
+    )}
+
+    {/* Gallery Images */}
+    {images.map((image) => (
+      <img
+        key={image.id}
+        src={`http://localhost:8000/uploads/${image.image}`}
+        alt="Property"
+        onClick={() => setSelectedImage(image.image)}
+        className={`w-28 h-20 rounded-lg object-cover cursor-pointer border-4 transition ${
+          selectedImage === image.image
+            ? "border-blue-600"
+            : "border-transparent hover:border-blue-300"
+        }`}
+      />
+    ))}
+
+  </div>
+)}
 
       <div className="p-8">
 
@@ -190,6 +249,25 @@ return (
       {property.property_type}
     </p>
   </div>
+  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+  <p className="flex items-center gap-2 text-gray-700 font-medium">
+    📌 Status
+  </p>
+
+  <p
+    className={`text-xl font-semibold mt-2 ${
+      property.status === "Available"
+        ? "text-green-600"
+        : property.status === "Sold"
+        ? "text-red-600"
+        : property.status === "Rented"
+        ? "text-blue-600"
+        : "text-yellow-600"
+    }`}
+  >
+    {property.status}
+  </p>
+</div>
 
   <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
    <p className="flex items-center gap-2 text-gray-700 font-medium">
@@ -214,34 +292,54 @@ return (
 </div>
        <div className="mt-10 flex flex-col md:flex-row gap-4">
 
-         <button
+  <button
   onClick={handleFavorite}
-  className={`flex-1 px-8 py-3 rounded-lg font-semibold text-white transition ${  
-  isFavorite
+  disabled={property.status !== "Available"}
+  className={`flex-1 px-8 py-3 rounded-lg font-semibold text-white transition ${
+    property.status !== "Available"
+      ? "bg-gray-400 cursor-not-allowed"
+      : isFavorite
       ? "bg-red-600 hover:bg-red-700"
       : "bg-blue-600 hover:bg-blue-700"
-   }`}
+  }`}
 >
   <span className="flex items-center justify-center gap-2">
-  <Heart size={20} fill={isFavorite ? "white" : "none"} />
-  {isFavorite
-    ? "Remove from Favorites"
-    : "Add to Favorites"}
-</span>
+    <Heart size={20} fill={isFavorite ? "white" : "none"} />
+
+    {property.status !== "Available"
+      ? "Not Available"
+      : isFavorite
+      ? "Remove from Favorites"
+      : "Add to Favorites"}
+  </span>
 </button>
-          <button
-  onClick={() => setShowContact(true)}
-  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold transition"
+         <button
+  onClick={() => {
+    if (property.status === "Available") {
+      setShowContact(true);
+    }
+  }}
+  disabled={property.status !== "Available"}
+  className={`flex-1 py-3 rounded-lg font-semibold transition text-white ${
+    property.status === "Available"
+      ? "bg-green-600 hover:bg-green-700"
+      : "bg-gray-400 cursor-not-allowed"
+  }`}
 >
   <span className="flex items-center justify-center gap-2">
-  <Phone size={20} />
-  Contact Owner
-</span>
+    <Phone size={20} />
+
+    {property.status === "Available"
+      ? "Contact Owner"
+      : property.status === "Sold"
+      ? "Property Sold"
+      : property.status === "Rented"
+      ? "Property Rented"
+      : "Property Pending"}
+  </span>
 </button>
 
         </div>
-
-      </div>
 
       </div>
 
@@ -356,7 +454,62 @@ return (
     )}
 
   </div>
+
+  {similarProperties.length > 0 && (
+    <>
+      <hr className="my-12" />
+
+      <div className="mt-8">
+        <h2 className="text-3xl font-bold mb-6">
+          🏠 Similar Properties
+        </h2>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {similarProperties.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden border hover:shadow-xl transition"
+            >
+              <img
+                src={
+                  item.image
+                    ? `http://localhost:8000/uploads/${item.image}`
+                    : "https://placehold.co/600x400?text=No+Image"
+                }
+                alt={item.title}
+                className="w-full h-52 object-cover"
+              />
+
+              <div className="p-5">
+                <h3 className="text-xl font-bold">
+                  {item.title}
+                </h3>
+
+                <p className="text-gray-500">
+                  📍 {item.city}
+                </p>
+
+                <p className="text-blue-600 font-bold text-xl mt-2">
+                  Rs. {Number(item.price).toLocaleString()}
+                </p>
+
+                <Link
+  to={`/properties/${item.id}`}
+  className="block mt-4 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+>
+  View Details
+</Link>
+              </div>
+            </div>
+           ))}
+        </div>
       </div>
+     </>
+     )}
+   </div>
+  </div>
 );
 }
+
 export default PropertyDetails;
+

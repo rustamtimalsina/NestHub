@@ -1,7 +1,25 @@
 import api from "./api";
 
-export const getProperties = async () => {
-  const response = await api.get("/properties");
+export const getProperties = async (
+  page = 1,
+  sort = "newest",
+  city = "",
+  propertyType = ""
+) => {
+
+  const response = await api.get(
+    `/properties/?page=${page}&limit=5&sort=${sort}&city=${city}&property_type=${propertyType}`
+  );
+
+  return response.data;
+};
+
+export const getCities = async () => {
+  const response = await api.get("/properties/cities");
+  return response.data;
+};
+export const getPropertyTypes = async () => {
+  const response = await api.get("/properties/types");
   return response.data;
 };
 
@@ -131,6 +149,7 @@ export const uploadImage = async (image) => {
   const formData = new FormData();
 
   formData.append("file", image);
+  const token = localStorage.getItem("token");
 
   const response = await api.post(
     "/properties/upload",
@@ -138,6 +157,7 @@ export const uploadImage = async (image) => {
     {
       headers: {
         "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
       },
     }
   );
@@ -153,6 +173,52 @@ export const createProperty = async (property) => {
     {
       headers: {
         Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
+
+export const getRecentProperties = async () => {
+  const response = await api.get("/properties/recent");
+  return response.data;
+};
+export const getSimilarProperties = async (propertyId) => {
+  const response = await api.get(`/properties/${propertyId}/similar`);
+  return response.data;
+};
+
+export const getPropertyImages = async (propertyId) => {
+  const response = await api.get(`/properties/${propertyId}/images`);
+  return response.data;
+};
+
+export const deletePropertyImage = async (imageId) => {
+  const response = await api.delete(`/properties/images/${imageId}`);
+  return response.data;
+};
+
+ export const setCoverImage = async (imageId) => {
+  const response = await api.put(`/properties/images/${imageId}/cover`);
+  return response.data;
+};
+
+export const uploadPropertyImages = async (propertyId, files) => {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+ 
+
+  const response = await api.post(
+    `/properties/${propertyId}/images`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
       },
     }
   );

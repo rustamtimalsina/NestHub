@@ -5,7 +5,7 @@ def add_favorite(user_email, property_id):
 
     cursor.execute(
         """
-        INSERT INTO favorites (user_email, property_id)
+        INSERT OR IGNORE INTO favorites (user_email, property_id)
         VALUES (?, ?)
         """,
         (
