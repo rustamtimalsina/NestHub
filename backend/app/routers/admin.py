@@ -59,10 +59,42 @@ def get_dashboard_stats(
         for row in cursor.fetchall()
     ]
 
+    # Recent properties
+    cursor.execute(
+        """
+        SELECT id, title, city, price, property_type, owner_email
+        FROM properties
+        ORDER BY id DESC
+        LIMIT 5
+        """
+    )
+
+    recent_properties = [
+        dict(row)
+        for row in cursor.fetchall()
+    ]
+
+    # Recent users
+    cursor.execute(
+        """
+        SELECT id, name, email, phone, role
+        FROM users
+        ORDER BY id DESC
+        LIMIT 5
+        """
+    )
+
+    recent_users = [
+        dict(row)
+        for row in cursor.fetchall()
+    ]
+
     return {
         "total_users": total_users,
         "total_properties": total_properties,
         "total_favorites": total_favorites,
         "properties_by_city": properties_by_city,
         "properties_by_type": properties_by_type,
+        "recent_properties": recent_properties,
+        "recent_users": recent_users,
     }
