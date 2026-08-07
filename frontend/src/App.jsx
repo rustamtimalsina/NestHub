@@ -14,6 +14,7 @@ import PropertyDetails from "./pages/PropertyDetails";
 import EditProperty from "./pages/EditProperty";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
+import AdminDashboard from "./pages/AdminDashboard";
 
 
 function App() {
@@ -27,6 +28,10 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/properties" element={<Properties />} />
+        <Route
+  path="/admin/dashboard"
+  element={<AdminDashboard />}
+/>
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route
   path="/add-property"

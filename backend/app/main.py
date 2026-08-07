@@ -3,6 +3,7 @@ from app.schemas import Property
 from app.database import connection, cursor
 from app.routers.properties import router as property_router
 from app.routers.users import router as user_router
+from app.routers.admin import router as admin_router
 from app.routers.favorites import router as favorites_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +22,7 @@ app.add_middleware(
 app.include_router(property_router)
 app.include_router(user_router)
 app.include_router(favorites_router)
+app.include_router(admin_router)
 uploads_dir = Path(__file__).resolve().parent.parent / "uploads"
 uploads_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")

@@ -14,6 +14,8 @@ router = APIRouter(
     prefix="/users",
     tags=["Users"]
 )
+from app.security.oauth2 import verify_token
+from app.security.admin import verify_admin
 
 
 @router.post("/")
@@ -110,6 +112,8 @@ def login(
     )
 
     db_user = cursor.fetchone()
+    print("========== LOGIN CALLED ==========")
+    print("USER ROLE:", db_user["role"])
 
     if db_user is None:
         raise HTTPException(
@@ -237,4 +241,27 @@ def reset_password(data: ResetPasswordRequest):
 
     return {
         "message": "Password reset successful."
+    }
+
+@router.put("/make-admin")
+def make_admin(current_user: str = Depends(verify_token)):
+    cursor.execute(
+        """
+        UPDATE users
+        SET role = 'admin'
+        WHERE email = ?
+        """,
+        (current_user,)
+    )
+
+    connection.commit()
+
+    return {
+        "message": "Your account is now an admin."
+    }
+@router.get("/admin-test")
+def admin_test(current_user: str = Depends(verify_admin)):
+    return {
+        "message": "Admin access granted!",
+        "user": current_user
     }

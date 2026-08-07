@@ -35,3 +35,4 @@ def verify_token(token: str = Depends(oauth2_scheme)):
             status_code=401,
             detail="Invalid Token"
         )
+    
