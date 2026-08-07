@@ -91,21 +91,76 @@ function AdminDashboard() {
 
     <div className="space-y-4">
       {stats.properties_by_city.map((city) => (
-        <div
-          key={city.city}
-          className="flex items-center justify-between border-b pb-3"
-        >
-          <span className="font-medium text-gray-700">
-            {city.city}
-          </span>
+  <div key={city.city} className="mb-5">
 
-          <span className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full font-semibold">
-            {city.total}
-          </span>
-        </div>
-      ))}
+    <div className="flex justify-between mb-2">
+      <span className="font-medium text-gray-700">
+        {city.city}
+      </span>
+
+      <span className="font-semibold text-blue-600">
+        {city.total}
+      </span>
+    </div>
+
+    <div className="w-full bg-gray-200 rounded-full h-3">
+      <div
+        className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+        style={{
+          width: `${Math.min(
+            (city.total / Math.max(...stats.properties_by_city.map(c => c.total))) * 100,
+            100
+          )}%`
+        }}
+      />
+    </div>
+
+  </div>
+))}
     </div>
   </div>
+  {/* Properties by Type */}
+<div className="mt-10 bg-white rounded-2xl shadow-lg p-6">
+  <h2 className="text-2xl font-bold mb-6">
+    Properties by Type
+  </h2>
+
+  <div className="space-y-5">
+    {stats.properties_by_type.map((type) => (
+      <div key={type.property_type}>
+
+        <div className="flex justify-between mb-2">
+          <span className="font-medium text-gray-700">
+            {type.property_type}
+          </span>
+
+          <span className="font-semibold text-green-600">
+            {type.total}
+          </span>
+        </div>
+
+        <div className="w-full bg-gray-200 rounded-full h-3">
+          <div
+            className="bg-green-500 h-3 rounded-full transition-all duration-500"
+            style={{
+              width: `${Math.min(
+                (type.total /
+                  Math.max(
+                    ...stats.properties_by_type.map(
+                      (t) => t.total
+                    )
+                  )) *
+                  100,
+                100
+              )}%`
+            }}
+          />
+        </div>
+
+      </div>
+    ))}
+  </div>
+</div>
 
 </div>
 

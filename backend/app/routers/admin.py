@@ -44,10 +44,25 @@ def get_dashboard_stats(
         dict(row)
         for row in cursor.fetchall()
     ]
+    # Properties by type
+    cursor.execute(
+        """
+        SELECT property_type, COUNT(*) AS total
+        FROM properties
+        GROUP BY property_type
+        ORDER BY total DESC
+        """
+    )
+
+    properties_by_type = [
+        dict(row)
+        for row in cursor.fetchall()
+    ]
 
     return {
         "total_users": total_users,
         "total_properties": total_properties,
         "total_favorites": total_favorites,
-        "properties_by_city": properties_by_city
+        "properties_by_city": properties_by_city,
+        "properties_by_type": properties_by_type,
     }
