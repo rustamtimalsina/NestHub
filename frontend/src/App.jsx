@@ -15,6 +15,7 @@ import EditProperty from "./pages/EditProperty";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminUsers from "./pages/AdminUsers";
 
 
 function App() {
@@ -64,6 +65,10 @@ function App() {
       <EditProperty />
     </ProtectedRoute>
   }
+/>
+<Route
+  path="/admin/users"
+  element={<AdminUsers />}
 />
       </Routes>
       <Footer />

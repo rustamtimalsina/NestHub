@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.security.admin import verify_admin
-from app.database import cursor
+from app.database import connection, cursor
 
 router = APIRouter(
     prefix="/admin",
@@ -97,4 +97,75 @@ def get_dashboard_stats(
         "properties_by_type": properties_by_type,
         "recent_properties": recent_properties,
         "recent_users": recent_users,
+    }
+@router.get("/users")
+def get_all_users(
+    current_user: str = Depends(verify_admin)
+):
+    cursor.execute(
+        """
+        SELECT id, name, email, phone, role
+        FROM users
+        ORDER BY id DESC
+        """
+    )
+
+    users = [
+        dict(row)
+        for row in cursor.fetchall()
+    ]
+
+    return users
+
+@router.put("/users/{user_id}/role")
+def change_user_role(
+    user_id: int,
+    role: str,
+    current_user: str = Depends(verify_admin)
+):
+    if role not in ["user", "admin"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Role must be either user or admin."
+        )
+
+    cursor.execute(
+        """
+        SELECT id, email, role
+        FROM users
+        WHERE id = ?
+        """,
+        (user_id,)
+    )
+
+    user = cursor.fetchone()
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found."
+        )
+
+    # Prevent admin from accidentally removing their own admin access
+    if user["email"] == current_user:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot change your own role."
+        )
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET role = ?
+        WHERE id = ?
+        """,
+        (role, user_id)
+    )
+
+    connection.commit()
+
+    return {
+        "message": "User role updated successfully.",
+        "user_id": user_id,
+        "role": role
     }

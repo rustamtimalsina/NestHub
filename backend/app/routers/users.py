@@ -243,25 +243,31 @@ def reset_password(data: ResetPasswordRequest):
         "message": "Password reset successful."
     }
 
-@router.put("/make-admin")
-def make_admin(current_user: str = Depends(verify_token)):
-    cursor.execute(
-        """
-        UPDATE users
-        SET role = 'admin'
-        WHERE email = ?
-        """,
-        (current_user,)
-    )
-
-    connection.commit()
-
-    return {
-        "message": "Your account is now an admin."
-    }
 @router.get("/admin-test")
 def admin_test(current_user: str = Depends(verify_admin)):
     return {
         "message": "Admin access granted!",
         "user": current_user
     }
+@router.get("/me")
+def get_me(
+    current_user: str = Depends(verify_token)
+):
+    cursor.execute(
+        """
+        SELECT id, name, email, phone, role
+        FROM users
+        WHERE email = ?
+        """,
+        (current_user,)
+    )
+
+    user = cursor.fetchone()
+
+    if user is None:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found."
+        )
+
+    return dict(user)

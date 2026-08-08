@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import {
   House,
@@ -13,8 +13,41 @@ import {
 function Navbar() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+const [user, setUser] = useState(null);
 
-  const token = localStorage.getItem("token");
+const token = localStorage.getItem("token");
+useEffect(() => {
+  async function loadUser() {
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        setUser(null);
+        return;
+      }
+
+      const data = await response.json();
+      setUser(data);
+    } catch (error) {
+      console.error("Failed to load user:", error);
+      setUser(null);
+    }
+  }
+
+  loadUser();
+}, [token]);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -81,6 +114,23 @@ function Navbar() {
     Add Property
 </div>
 </Link>
+{user?.role === "admin" && (
+  <>
+    <Link
+      to="/admin/dashboard"
+      className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
+    >
+      Admin Dashboard
+    </Link>
+
+    <Link
+      to="/admin/users"
+      className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
+    >
+      User Management
+    </Link>
+  </>
+)}
 <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-xl">
     <CircleUserRound
         size={22}
@@ -103,6 +153,7 @@ function Navbar() {
               </button>
             </>
           )}
+
 
           {!token && (
             <>
@@ -181,6 +232,25 @@ function Navbar() {
   <PlusSquare size={18} />
   Add Property
 </Link>
+{user?.role === "admin" && (
+  <>
+    <Link
+      to="/admin/dashboard"
+      onClick={() => setMenuOpen(false)}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
+    >
+      Admin Dashboard
+    </Link>
+
+    <Link
+      to="/admin/users"
+      onClick={() => setMenuOpen(false)}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
+    >
+      User Management
+    </Link>
+  </>
+)}
 
         <button
   onClick={() => {
