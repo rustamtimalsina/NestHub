@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-
+from app.schemas import Property
 from app.security.admin import verify_admin
 from app.database import connection, cursor
+from app.services.property_service import (
+    get_all_properties_admin,
+    admin_delete_property,
+    admin_update_property
+)
 
 router = APIRouter(
     prefix="/admin",
@@ -168,4 +173,45 @@ def change_user_role(
         "message": "User role updated successfully.",
         "user_id": user_id,
         "role": role
+    }
+@router.get("/properties")
+def get_admin_properties(
+    current_user: str = Depends(verify_admin)
+):
+    return get_all_properties_admin()
+@router.delete("/properties/{property_id}")
+def delete_admin_property(
+    property_id: int,
+    current_user: str = Depends(verify_admin)
+):
+    result = admin_delete_property(property_id)
+
+    if result == "not_found":
+        raise HTTPException(
+            status_code=404,
+            detail="Property not found"
+        )
+
+    return {
+        "message": "Property deleted successfully."
+    }
+@router.put("/properties/{property_id}")
+def update_admin_property(
+    property_id: int,
+    property: Property,
+    current_user: str = Depends(verify_admin)
+):
+    result = admin_update_property(
+        property_id,
+        property
+    )
+
+    if result == "not_found":
+        raise HTTPException(
+            status_code=404,
+            detail="Property not found"
+        )
+
+    return {
+        "message": "Property updated successfully."
     }

@@ -15,6 +15,7 @@ import EditProperty from "./pages/EditProperty";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminProperties from "./pages/AdminProperties";
 import AdminUsers from "./pages/AdminUsers";
 
 
@@ -32,6 +33,10 @@ function App() {
         <Route
   path="/admin/dashboard"
   element={<AdminDashboard />}
+/>
+<Route
+  path="/admin/properties"
+  element={<AdminProperties />}
 />
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route

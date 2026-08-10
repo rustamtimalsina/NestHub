@@ -211,6 +211,26 @@ def get_my_properties(current_user):
     properties = cursor.fetchall()
 
     return [dict(property) for property in properties]
+def get_all_properties_admin():
+    cursor.execute(
+        """
+        SELECT
+            properties.*,
+            users.name AS owner_name,
+            users.phone AS owner_phone
+        FROM properties
+        LEFT JOIN users
+            ON properties.owner_email = users.email
+        ORDER BY properties.id DESC
+        """
+    )
+
+    properties = cursor.fetchall()
+
+    return [
+        dict(property)
+        for property in properties
+    ]
 def get_recent_properties():
 
     cursor.execute(
@@ -370,6 +390,81 @@ def set_cover_image(image_id: int, current_user: str):
         image["image"],
         image["property_id"]
     ))
+
+    connection.commit()
+
+    return "success"
+def admin_delete_property(property_id):
+    cursor.execute(
+        """
+        SELECT id
+        FROM properties
+        WHERE id = ?
+        """,
+        (property_id,)
+    )
+
+    property = cursor.fetchone()
+
+    if property is None:
+        return "not_found"
+
+    cursor.execute(
+        """
+        DELETE FROM properties
+        WHERE id = ?
+        """,
+        (property_id,)
+    )
+
+    connection.commit()
+
+    return "success"
+def admin_update_property(property_id, property):
+    cursor.execute(
+        """
+        SELECT id
+        FROM properties
+        WHERE id = ?
+        """,
+        (property_id,)
+    )
+
+    existing_property = cursor.fetchone()
+
+    if existing_property is None:
+        return "not_found"
+
+    cursor.execute(
+        """
+        UPDATE properties
+        SET
+            title = ?,
+            description = ?,
+            city = ?,
+            price = ?,
+            bedrooms = ?,
+            bathrooms = ?,
+            area = ?,
+            property_type = ?,
+            status = ?,
+            image = ?
+        WHERE id = ?
+        """,
+        (
+            property.title,
+            property.description,
+            property.city,
+            property.price,
+            property.bedrooms,
+            property.bathrooms,
+            property.area,
+            property.property_type,
+            property.status,
+            property.image,
+            property_id
+        )
+    )
 
     connection.commit()
 
