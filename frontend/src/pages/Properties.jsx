@@ -8,6 +8,7 @@ import {
 
 function Properties() {
   const [properties, setProperties] = useState([]);
+const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const searchKeyword = searchParams.get("keyword") || "";
   const [keyword, setKeyword] = useState(searchKeyword);
@@ -17,14 +18,19 @@ function Properties() {
 
     async function loadResults() {
       try {
+        setLoading(true);
         const data = searchKeyword
           ? await searchProperties(searchKeyword)
           : await getProperties();
         if (active) setProperties(searchKeyword ? data : data.properties);
       } catch (error) {
         console.error(error);
-      }
+     } finally {
+    if (active) {
+      setLoading(false);
     }
+  }
+}
 
     loadResults();
     return () => {
@@ -33,30 +39,41 @@ function Properties() {
   }, [searchKeyword]);
 
    async function handleSearch(searchText = keyword) {
-      console.log("Button clicked");
-      console.log("Keyword:", keyword); 
- if (searchText.trim() === "") {
+  console.log("Button clicked");
+  console.log("Keyword:", keyword);
+
+  if (searchText.trim() === "") {
     loadProperties();
     return;
   }
+
   try {
+    setLoading(true);
+
     const data = await searchProperties(searchText);
-     console.log("Search result:", data);
+    console.log("Search result:", data);
+
     setProperties(data);
   } catch (error) {
     console.error(error);
+  } finally {
+    setLoading(false);
   }
 }
   
 
   async function loadProperties() {
-    try {
-      const data = await getProperties();
-      setProperties(data.properties);
-    } catch (error) {
-      console.error(error);
-    }
+  try {
+    setLoading(true);
+
+    const data = await getProperties();
+    setProperties(data.properties);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -96,7 +113,13 @@ function Properties() {
   </button>
 
 </form>
-     {properties.length > 0 ? (
+     {loading ? (
+  <div className="text-center py-20">
+    <p className="text-gray-500 text-lg">
+      Loading properties...
+    </p>
+  </div>
+) : properties.length > 0 ? (
 
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
 
