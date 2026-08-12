@@ -16,6 +16,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Footer from "./components/Footer";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminProperties from "./pages/AdminProperties";
+import AdminProtectedRoute from "./AdminProtectedRoute";
 import AdminUsers from "./pages/AdminUsers";
 
 
@@ -30,14 +31,33 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/properties" element={<Properties />} />
-        <Route
+    <Route
   path="/admin/dashboard"
-  element={<AdminDashboard />}
+  element={
+    <AdminProtectedRoute>
+      <AdminDashboard />
+    </AdminProtectedRoute>
+  }
 />
+
+<Route
+  path="/admin/users"
+  element={
+    <AdminProtectedRoute>
+      <AdminUsers />
+    </AdminProtectedRoute>
+  }
+/>
+
 <Route
   path="/admin/properties"
-  element={<AdminProperties />}
+  element={
+    <AdminProtectedRoute>
+      <AdminProperties />
+    </AdminProtectedRoute>
+  }
 />
+
         <Route path="/properties/:id" element={<PropertyDetails />} />
         <Route
   path="/add-property"
@@ -70,10 +90,6 @@ function App() {
       <EditProperty />
     </ProtectedRoute>
   }
-/>
-<Route
-  path="/admin/users"
-  element={<AdminUsers />}
 />
       </Routes>
       <Footer />

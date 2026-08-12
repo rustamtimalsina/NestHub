@@ -1,13 +1,36 @@
 from app.database import cursor, connection
 
 
-def create_property(title, description, city, price, bedrooms, bathrooms, area, property_type,status, image, owner_email):
-
+def create_property(
+    title,
+    description,
+    city,
+    price,
+    bedrooms,
+    bathrooms,
+    area,
+    property_type,
+    status,
+    image,
+    owner_email
+):
     cursor.execute(
         """
-      INSERT INTO properties
-(title, description, city, price, bedrooms, bathrooms, area, property_type, status, image, owner_email)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO properties
+        (
+            title,
+            description,
+            city,
+            price,
+            bedrooms,
+            bathrooms,
+            area,
+            property_type,
+            status,
+            image,
+            owner_email
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             title,
@@ -23,8 +46,21 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             owner_email
         )
     )
-    connection.commit()
 
+    property_id = cursor.lastrowid
+
+    # Add the initial property image to the gallery
+    if image:
+        cursor.execute(
+            """
+            INSERT INTO property_images
+            (property_id, image)
+            VALUES (?, ?)
+            """,
+            (property_id, image)
+        )
+
+    connection.commit()
 def get_property_by_id(property_id):
 
     cursor.execute(
