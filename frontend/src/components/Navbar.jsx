@@ -129,6 +129,13 @@ useEffect(() => {
     >
       User Management
     </Link>
+
+    <Link
+      to="/admin/properties"
+      className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
+    >
+      Property Management
+    </Link>
   </>
 )}
 <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-xl">
