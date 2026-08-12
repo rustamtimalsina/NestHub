@@ -86,12 +86,12 @@ def create_user(user: User):
         VALUES (?, ?, ?, ?, ?)
         """,
         (
-            user.name,
-            user.email,
-            user.phone,
-            hashed_password,
-            user.role
-        )
+    user.name,
+    user.email,
+    user.phone,
+    hashed_password,
+    "user"
+)
     )
 
     connection.commit()
