@@ -86,12 +86,12 @@ def create_user(user: User):
         VALUES (?, ?, ?, ?, ?)
         """,
         (
-            user.name,
-            user.email,
-            user.phone,
-            hashed_password,
-            user.role
-        )
+    user.name,
+    user.email,
+    user.phone,
+    hashed_password,
+    "user"
+)
     )
 
     connection.commit()
@@ -112,8 +112,6 @@ def login(
     )
 
     db_user = cursor.fetchone()
-    print("========== LOGIN CALLED ==========")
-    print("USER ROLE:", db_user["role"])
 
     if db_user is None:
         raise HTTPException(
@@ -121,6 +119,8 @@ def login(
             detail="Invalid email or password"
         )
 
+    print("========== LOGIN CALLED ==========")
+    print("USER ROLE:", db_user["role"])
     if not verify_password(
         form_data.password,
         db_user["password"]

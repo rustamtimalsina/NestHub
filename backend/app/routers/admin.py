@@ -179,6 +179,7 @@ def get_admin_properties(
     current_user: str = Depends(verify_admin)
 ):
     return get_all_properties_admin()
+
 @router.delete("/properties/{property_id}")
 def delete_admin_property(
     property_id: int,

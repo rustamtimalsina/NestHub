@@ -47,7 +47,9 @@ def create_property(
         )
     )
 
-    property_id = cursor.lastrowid
+    property_id = cursor.execute(
+    "SELECT last_insert_rowid()"
+).fetchone()[0]
 
     # Add the initial property image to the gallery
     if image:
@@ -149,6 +151,19 @@ def delete_property(property_id, current_user):
     if owner["owner_email"] != current_user:
         return "unauthorized"
 
+    # Delete property images
+    cursor.execute(
+        "DELETE FROM property_images WHERE property_id = ?",
+        (property_id,)
+    )
+
+    # Delete favorites for this property
+    cursor.execute(
+        "DELETE FROM favorites WHERE property_id = ?",
+        (property_id,)
+    )
+
+    # Delete the property
     cursor.execute(
         "DELETE FROM properties WHERE id = ?",
         (property_id,)
@@ -334,18 +349,6 @@ def add_property_images(property_id, images):
 
     connection.commit()
 
-def add_property_images(property_id, images):
-    for image in images:
-        cursor.execute(
-            """
-            INSERT INTO property_images (property_id, image)
-            VALUES (?, ?)
-            """,
-            (property_id, image)
-        )
-
-    connection.commit()
-
 def get_property_images(property_id):
 
     cursor.execute(
@@ -445,6 +448,25 @@ def admin_delete_property(property_id):
     if property is None:
         return "not_found"
 
+    # Delete property images
+    cursor.execute(
+        """
+        DELETE FROM property_images
+        WHERE property_id = ?
+        """,
+        (property_id,)
+    )
+
+    # Delete favorites
+    cursor.execute(
+        """
+        DELETE FROM favorites
+        WHERE property_id = ?
+        """,
+        (property_id,)
+    )
+
+    # Delete property
     cursor.execute(
         """
         DELETE FROM properties
