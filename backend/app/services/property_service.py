@@ -334,18 +334,6 @@ def add_property_images(property_id, images):
 
     connection.commit()
 
-def add_property_images(property_id, images):
-    for image in images:
-        cursor.execute(
-            """
-            INSERT INTO property_images (property_id, image)
-            VALUES (?, ?)
-            """,
-            (property_id, image)
-        )
-
-    connection.commit()
-
 def get_property_images(property_id):
 
     cursor.execute(
