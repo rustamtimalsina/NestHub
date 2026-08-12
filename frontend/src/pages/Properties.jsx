@@ -9,6 +9,7 @@ import {
 function Properties() {
   const [properties, setProperties] = useState([]);
 const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
   const [searchParams] = useSearchParams();
   const searchKeyword = searchParams.get("keyword") || "";
   const [keyword, setKeyword] = useState(searchKeyword);
@@ -19,13 +20,18 @@ const [loading, setLoading] = useState(true);
     async function loadResults() {
       try {
         setLoading(true);
+        setError("");
         const data = searchKeyword
           ? await searchProperties(searchKeyword)
           : await getProperties();
         if (active) setProperties(searchKeyword ? data : data.properties);
       } catch (error) {
-        console.error(error);
-     } finally {
+  console.error(error);
+
+  if (active) {
+    setError("Unable to load properties. Please try again.");
+  }
+} finally {
     if (active) {
       setLoading(false);
     }
@@ -49,27 +55,31 @@ const [loading, setLoading] = useState(true);
 
   try {
     setLoading(true);
+    setError("");
 
     const data = await searchProperties(searchText);
     console.log("Search result:", data);
 
     setProperties(data);
-  } catch (error) {
-    console.error(error);
-  } finally {
-    setLoading(false);
-  }
+ } catch (error) {
+  console.error(error);
+  setError("Unable to search properties. Please try again.");
+} finally {
+  setLoading(false);
+}
 }
   
 
-  async function loadProperties() {
+ async function loadProperties() {
   try {
     setLoading(true);
+    setError("");
 
     const data = await getProperties();
     setProperties(data.properties);
   } catch (error) {
     console.error(error);
+    setError("Unable to load properties. Please try again.");
   } finally {
     setLoading(false);
   }
@@ -113,11 +123,28 @@ const [loading, setLoading] = useState(true);
   </button>
 
 </form>
-     {loading ? (
+    {loading ? (
   <div className="text-center py-20">
     <p className="text-gray-500 text-lg">
       Loading properties...
     </p>
+  </div>
+) : error ? (
+  <div className="bg-white rounded-3xl shadow-lg border border-red-200 py-20 text-center">
+    <h2 className="text-3xl font-bold text-red-600">
+      ⚠️ Something went wrong
+    </h2>
+
+    <p className="text-gray-500 mt-3">
+      {error}
+    </p>
+
+    <button
+      onClick={() => window.location.reload()}
+      className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition"
+    >
+      Try Again
+    </button>
   </div>
 ) : properties.length > 0 ? (
 
