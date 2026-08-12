@@ -249,6 +249,30 @@ async def upload_property_images(
     files: list[UploadFile] = File(...),
     current_user: str = Depends(verify_token),
 ):
+    # Check property ownership
+    cursor.execute(
+        """
+        SELECT owner_email
+        FROM properties
+        WHERE id = ?
+        """,
+        (property_id,)
+    )
+
+    property = cursor.fetchone()
+
+    if property is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Property not found"
+        )
+
+    if property["owner_email"] != current_user:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not the owner of this property"
+        )
+
     filenames = []
 
     upload_path = BASE_DIR / "uploads"
