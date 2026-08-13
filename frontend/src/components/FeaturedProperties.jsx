@@ -10,8 +10,11 @@ function FeaturedProperties() {
   console.log("FeaturedProperties rendered");
 
   const [properties, setProperties] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
 const [totalPages, setTotalPages] = useState(1);
  const [sort, setSort] = useState("newest");
+ const [page, setPage] = useState(1);
   const [city, setCity] = useState("");
 const [propertyType, setPropertyType] = useState("");
 const [cities, setCities] = useState([]);
@@ -20,23 +23,40 @@ const [propertyTypes, setPropertyTypes] = useState([]);
   useEffect(() => {
     let active = true;
 
-    async function loadProperties() {
-      try {
-        const data = await getProperties(1, sort, city, propertyType);
-        if (active) {
-         setProperties(data.properties.slice(0, 6));
-          setTotalPages(data.total_pages);
-        }
-      } catch (error) {
-        console.error(error);
-      }
+  async function loadProperties() {
+  try {
+    setLoading(true);
+    setError("");
+
+    const data = await getProperties(
+      page,
+      sort,
+      city,
+      propertyType
+    );
+
+    if (active) {
+      setProperties(data.properties.slice(0, 6));
+      setTotalPages(data.total_pages);
     }
+  } catch (error) {
+    console.error(error);
+
+    if (active) {
+      setError("Unable to load properties.");
+    }
+  } finally {
+    if (active) {
+      setLoading(false);
+    }
+  }
+}
 
     loadProperties();
     return () => {
       active = false;
     };
-  }, [sort, city, propertyType]);
+}, [page, sort, city, propertyType]);
 
   useEffect(() => {
     let active = true;
@@ -125,14 +145,35 @@ const [propertyTypes, setPropertyTypes] = useState([]);
 
 </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
-          {properties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-            />
-          ))}
-        </div>
+       {loading ? (
+  <div className="text-center py-16">
+    <p className="text-gray-500 text-lg">
+      Loading properties...
+    </p>
+  </div>
+) : error ? (
+  <div className="text-center py-16">
+    <p className="text-red-500 text-lg">
+      ⚠️ {error}
+    </p>
+
+    <button
+      onClick={() => window.location.reload()}
+      className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg"
+    >
+      Try Again
+    </button>
+  </div>
+) : (
+  <div className="grid md:grid-cols-3 gap-8">
+    {properties.map((property) => (
+      <PropertyCard
+        key={property.id}
+        property={property}
+      />
+    ))}
+  </div>
+)}
 <div className="flex justify-center mt-12">
   <a
     href="/properties"

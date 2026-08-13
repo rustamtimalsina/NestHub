@@ -8,6 +8,8 @@ import {
 
 function Properties() {
   const [properties, setProperties] = useState([]);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState("");
   const [searchParams] = useSearchParams();
   const searchKeyword = searchParams.get("keyword") || "";
   const [keyword, setKeyword] = useState(searchKeyword);
@@ -17,14 +19,24 @@ function Properties() {
 
     async function loadResults() {
       try {
+        setLoading(true);
+        setError("");
         const data = searchKeyword
           ? await searchProperties(searchKeyword)
           : await getProperties();
         if (active) setProperties(searchKeyword ? data : data.properties);
       } catch (error) {
-        console.error(error);
-      }
+  console.error(error);
+
+  if (active) {
+    setError("Unable to load properties. Please try again.");
+  }
+} finally {
+    if (active) {
+      setLoading(false);
     }
+  }
+}
 
     loadResults();
     return () => {
@@ -33,30 +45,45 @@ function Properties() {
   }, [searchKeyword]);
 
    async function handleSearch(searchText = keyword) {
-      console.log("Button clicked");
-      console.log("Keyword:", keyword); 
- if (searchText.trim() === "") {
+  console.log("Button clicked");
+  console.log("Keyword:", keyword);
+
+  if (searchText.trim() === "") {
     loadProperties();
     return;
   }
+
   try {
+    setLoading(true);
+    setError("");
+
     const data = await searchProperties(searchText);
-     console.log("Search result:", data);
+    console.log("Search result:", data);
+
     setProperties(data);
-  } catch (error) {
-    console.error(error);
-  }
+ } catch (error) {
+  console.error(error);
+  setError("Unable to search properties. Please try again.");
+} finally {
+  setLoading(false);
+}
 }
   
 
-  async function loadProperties() {
-    try {
-      const data = await getProperties();
-      setProperties(data.properties);
-    } catch (error) {
-      console.error(error);
-    }
+ async function loadProperties() {
+  try {
+    setLoading(true);
+    setError("");
+
+    const data = await getProperties();
+    setProperties(data.properties);
+  } catch (error) {
+    console.error(error);
+    setError("Unable to load properties. Please try again.");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10">
@@ -96,7 +123,30 @@ function Properties() {
   </button>
 
 </form>
-     {properties.length > 0 ? (
+    {loading ? (
+  <div className="text-center py-20">
+    <p className="text-gray-500 text-lg">
+      Loading properties...
+    </p>
+  </div>
+) : error ? (
+  <div className="bg-white rounded-3xl shadow-lg border border-red-200 py-20 text-center">
+    <h2 className="text-3xl font-bold text-red-600">
+      ⚠️ Something went wrong
+    </h2>
+
+    <p className="text-gray-500 mt-3">
+      {error}
+    </p>
+
+    <button
+      onClick={() => window.location.reload()}
+      className="mt-8 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition"
+    >
+      Try Again
+    </button>
+  </div>
+) : properties.length > 0 ? (
 
   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
 

@@ -387,6 +387,9 @@ def delete_property_image(image_id: int, current_user: str):
 
     property = cursor.fetchone()
 
+    if property is None:
+        return "not_found"
+
     if property["owner_email"] != current_user:
         return "unauthorized"
 
@@ -417,6 +420,9 @@ def set_cover_image(image_id: int, current_user: str):
     """, (image["property_id"],))
 
     property = cursor.fetchone()
+
+    if property is None:
+        return "not_found"
 
     if property["owner_email"] != current_user:
         return "unauthorized"
