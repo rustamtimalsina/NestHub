@@ -1,5 +1,5 @@
 import Hero from "../components/Hero";
-import SearchBar from "../components/SearchBar";
+import SearchBar from "../components/Searchbar";
 import FeaturedProperties from "../components/FeaturedProperties";
 import RecentProperties from "../components/RecentProperties";
 

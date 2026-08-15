@@ -16,3 +16,6 @@ backend/uploads/
 
 # Environment variables
 backend/.env
+# Frontend environment variables
+frontend/.env
+frontend/.env.*
