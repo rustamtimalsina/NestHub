@@ -3,9 +3,7 @@ import sqlite3
 import threading
 from pathlib import Path
 
-# ============================================================
-# DATABASE CONFIGURATION
-# ============================================================
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
@@ -27,8 +25,6 @@ if DATABASE_URL:
 # ============================================================
 
 else:
-    BASE_DIR = Path(__file__).resolve().parent.parent
-
     sqlite_connection = sqlite3.connect(
         BASE_DIR / "nesthub.db",
         check_same_thread=False
