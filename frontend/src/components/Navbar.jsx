@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
+import api from "../services/api";
 import {
   House,
   Building2,
@@ -24,26 +25,12 @@ useEffect(() => {
     }
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/users/me",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        setUser(null);
-        return;
-      }
-
-      const data = await response.json();
-      setUser(data);
-    } catch (error) {
-      console.error("Failed to load user:", error);
-      setUser(null);
-    }
+  const response = await api.get("/users/me");
+  setUser(response.data);
+} catch (error) {
+  console.error("Failed to load user:", error);
+  setUser(null);
+}
   }
 
   loadUser();
