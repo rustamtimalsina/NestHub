@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+const API_URL = import.meta.env.VITE_API_URL;
 import {
   MapPin,
   BedDouble,
@@ -19,14 +20,14 @@ function PropertyCard({ property }) {
 >
 <div className="relative">
 
- <img
+<img
   src={
     property.image
-      ? `http://localhost:8000/uploads/${property.image}`
+      ? `${API_URL}/uploads/${property.image}`
       : "https://placehold.co/600x400?text=No+Image"
   }
   alt={property.title}
- className="w-full h-52 sm:h-60 object-cover transition-transform duration-500 group-hover:scale-110"
+  className="w-full h-52 sm:h-60 object-cover transition-transform duration-500 group-hover:scale-110"
 />
 
   <span className="absolute top-4 right-4 bg-blue-600 text-white text-sm font-semibold px-4 py-1 rounded-full shadow-lg">
