@@ -11,6 +11,8 @@ import {
 import PropertyCard from "../components/PropertyCard";
 import Swal from "sweetalert2";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function MyProperties() {
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
@@ -319,7 +321,7 @@ async function removeImage(imageId) {
                       className="relative border rounded-lg overflow-hidden"
                     >
                       <img
-                        src={`http://localhost:8000/uploads/${image.image}`}
+                        src={`${API_URL}/uploads/${image.image}`}
                         alt=""
                         className="w-full h-24 object-cover"
                       />
