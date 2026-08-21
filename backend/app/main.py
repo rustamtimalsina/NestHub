@@ -10,12 +10,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
 
 app = FastAPI()
+
 app.add_middleware(
     CORSMiddleware,
-   allow_origins=[
-    "http://localhost:5173",
-    "https://nesthub-seven.vercel.app",
-],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://nesthub-seven.vercel.app",
+        "https://nest-lkrwukzxd-rustam-timalsinas-projects.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
