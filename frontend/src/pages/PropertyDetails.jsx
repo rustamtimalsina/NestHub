@@ -21,6 +21,8 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function PropertyDetails() {
   const { id } = useParams();
 
@@ -113,9 +115,9 @@ return (
       <img
        src={
   selectedImage
-    ? `http://localhost:8000/uploads/${selectedImage}`
+    ? `${API_URL}/uploads/${selectedImage}`
     : property.image
-    ? `http://localhost:8000/uploads/${property.image}`
+    ? `${API_URL}/uploads/${property.image}`
     : "https://placehold.co/1200x600?text=No+Image"
 }
         alt={property.title}
@@ -127,7 +129,7 @@ return (
     {/* Cover Image */}
     {property.image && (
       <img
-        src={`http://localhost:8000/uploads/${property.image}`}
+        src={`${API_URL}/uploads/${property.image}`}
         alt="Cover"
         onClick={() => setSelectedImage(property.image)}
         className={`w-28 h-20 rounded-lg object-cover cursor-pointer border-4 transition ${
@@ -142,7 +144,7 @@ return (
     {images.map((image) => (
       <img
         key={image.id}
-        src={`http://localhost:8000/uploads/${image.image}`}
+        src={`${API_URL}/uploads/${image.image}`}
         alt="Property"
         onClick={() => setSelectedImage(image.image)}
         className={`w-28 h-20 rounded-lg object-cover cursor-pointer border-4 transition ${
@@ -473,7 +475,7 @@ return (
               <img
                 src={
                   item.image
-                    ? `http://localhost:8000/uploads/${item.image}`
+                    ? `${API_URL}/uploads/${item.image}`
                     : "https://placehold.co/600x400?text=No+Image"
                 }
                 alt={item.title}
