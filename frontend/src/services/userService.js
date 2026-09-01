@@ -20,7 +20,7 @@ export const loginUser = async (email, password) => {
 };
 
 export const registerUser = async (user) => {
-  const response = await api.post("/users", user);
+  const response = await api.post("/users/", user);
   return response.data;
 };
 export const forgotPassword = async (email) => {
