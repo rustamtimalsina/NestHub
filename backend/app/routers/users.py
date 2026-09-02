@@ -79,22 +79,33 @@ def create_user(user: User):
 
     hashed_password = hash_password(user.password)
 
-    cursor.execute(
-        """
-        INSERT INTO users
-        (name, email, phone, password, role)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (
-    user.name,
-    user.email,
-    user.phone,
-    hashed_password,
-    "user"
-)
-    )
+    try:
+        cursor.execute(
+            """
+            INSERT INTO users
+            (name, email, phone, password, role)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                user.name,
+                user.email,
+                user.phone,
+                hashed_password,
+                "user"
+            )
+        )
 
-    connection.commit()
+        connection.commit()
+
+    except Exception as error:
+        print("========== REGISTRATION ERROR ==========")
+        print("ERROR:", repr(error))
+        print("========================================")
+
+        raise HTTPException(
+            status_code=500,
+            detail="Database error while creating user."
+        )
 
     return {
         "message": "User created successfully!"
