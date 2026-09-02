@@ -11,17 +11,6 @@ from pathlib import Path
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://nest-hub-six.vercel.app",
-        "https://nest-lkrwukzxd-rustam-timalsinas-projects.vercel.app",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 app.include_router(property_router)
 app.include_router(user_router)
 app.include_router(favorites_router)
@@ -65,5 +54,22 @@ def search(city: str):
     return {
         "city": city
     }
+
+
+# Wrap the complete ASGI application so CORS headers are also returned for
+# unexpected server errors.  Using ``add_middleware`` only covers errors
+# handled inside the FastAPI app, which causes browsers to hide a 500 response
+# as a misleading CORS error.
+app = CORSMiddleware(
+    app=app,
+    allow_origins=[
+        "http://localhost:5173",
+        "https://nest-hub-six.vercel.app",
+        "https://nest-lkrwukzxd-rustam-timalsinas-projects.vercel.app",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
