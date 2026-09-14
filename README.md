@@ -1,29 +1,39 @@
 # 🏡 NestHub
 
-NestHub is a full-stack real estate application where users can register, log in, and manage property listings.
+NestHub is a full-stack real estate application where users can register, log in, browse listings, and manage properties — with a dedicated admin dashboard for site-wide management.
 
 ## 🚀 Features
 
 - 🔐 JWT Authentication
 - 👤 User Registration & Login
-- 🏠 Add Property
-- ✏️ Edit Property
-- ❌ Delete Property
+- 🔑 Forgot / Reset Password via Email
+- 🏠 Add, Edit & Delete Property
 - 🔍 Search Properties
 - 📄 View Property Details
 - ❤️ Favorite Properties
 - 📸 Upload Property Images
 - 📄 Pagination
 - ✅ Input Validation
+- 🛡️ Admin Dashboard (manage users & properties)
 
-## 🛠️ Backend Tech Stack
+## 🛠️ Tech Stack
 
+**Backend**
 - FastAPI
-- SQLite
+- SQLite (dev) / PostgreSQL (production)
 - Pydantic
 - JWT Authentication
-- Passlib (Password Hashing)
+- Passlib & Bcrypt (Password Hashing)
+- FastAPI-Mail (Password Reset Emails)
 - Python
+
+**Frontend**
+- React
+- Vite
+- Tailwind CSS
+- React Router
+- Axios
+- Framer Motion
 
 ## 📁 Project Structure
 
@@ -36,4 +46,4 @@ NestHub/
 ## 📌 Status
 
 - ✅ Backend Completed
-- 🚧 Frontend Coming Soon
+- ✅ Frontend Completed
