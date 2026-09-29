@@ -1,15 +1,16 @@
+import os
 import re
 import secrets
 import hashlib
 from datetime import datetime, timedelta
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-
+from fastapi.responses import RedirectResponse
 from app.database import cursor, connection
 from app.schemas import User, ResetPasswordRequest
 from app.security.hashing import hash_password, verify_password
 from app.security.token import create_access_token
-from app.email_utils import send_reset_email
+from app.email_utils import send_reset_email, send_verification_email
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
@@ -19,7 +20,7 @@ from app.security.admin import verify_admin
 
 
 @router.post("/")
-def create_user(user: User):
+async def create_user(user: User):
     # Validate name
     if len(user.name.strip()) < 3:
       raise HTTPException(
@@ -79,19 +80,27 @@ def create_user(user: User):
 
     hashed_password = hash_password(user.password)
 
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    expiry = datetime.utcnow() + timedelta(hours=24)
+
     try:
         cursor.execute(
             """
             INSERT INTO users
-            (name, email, phone, password, role)
-            VALUES (?, ?, ?, ?, ?)
+            (name, email, phone, password, role,
+             is_verified, verify_token, verify_expiry)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 user.name,
                 user.email,
                 user.phone,
                 hashed_password,
-                "user"
+                "user",
+                0,
+                token_hash,
+                expiry.isoformat(),
             )
         )
 
@@ -99,8 +108,6 @@ def create_user(user: User):
 
     except Exception as error:
         connection.rollback()
-
-        # Log only the kind of error, never the data inside it
         print(f"Registration failed: {type(error).__name__}")
 
         raise HTTPException(
@@ -108,9 +115,83 @@ def create_user(user: User):
             detail="Database error while creating user."
         )
 
+    try:
+        await send_verification_email(user.email, token)
+    except Exception as error:
+        print(f"Verification email failed: {type(error).__name__}: {str(error)[:200]}")
+        return {
+            "message": "Account created, but the verification email could not be sent. Please request a new one."
+        }
+
     return {
-        "message": "User created successfully!"
+        "message": "Account created! Please check your email to verify your account."
     }
+
+
+@router.get("/verify")
+def verify_email(token: str):
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+    cursor.execute(
+        "SELECT id, verify_expiry FROM users WHERE verify_token = ?",
+        (token_hash,)
+    )
+    user = cursor.fetchone()
+
+    if user is None or user["verify_expiry"] is None:
+        return RedirectResponse(f"{frontend_url}/login?verified=invalid")
+
+    if datetime.utcnow() > datetime.fromisoformat(user["verify_expiry"]):
+        return RedirectResponse(f"{frontend_url}/login?verified=expired")
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET is_verified = 1, verify_token = NULL, verify_expiry = NULL
+        WHERE id = ?
+        """,
+        (user["id"],)
+    )
+    connection.commit()
+
+    return RedirectResponse(f"{frontend_url}/login?verified=1")
+
+
+@router.post("/resend-verification")
+async def resend_verification(email: str):
+    reply = {"message": "If that account exists and is not verified, a new link has been sent."}
+
+    cursor.execute(
+        "SELECT id, is_verified FROM users WHERE email = ?",
+        (email,)
+    )
+    user = cursor.fetchone()
+
+    if user is None or user["is_verified"]:
+        return reply
+
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    expiry = datetime.utcnow() + timedelta(hours=24)
+
+    cursor.execute(
+        "UPDATE users SET verify_token = ?, verify_expiry = ? WHERE id = ?",
+        (token_hash, expiry.isoformat(), user["id"])
+    )
+    connection.commit()
+
+    try:
+        await send_verification_email(email, token)
+    except Exception as error:
+        print(f"Verification email failed: {type(error).__name__}")
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to send the verification email. Please try again later."
+        )
+
+    return reply
+
 @router.post("/login")
 def login(
     form_data: OAuth2PasswordRequestForm = Depends()
@@ -142,6 +223,12 @@ def login(
             detail="Invalid email or password"
         )
 
+    if not db_user["is_verified"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Please verify your email before logging in."
+        )
+
     token = create_access_token(
         {
             "sub": db_user["email"]
@@ -152,6 +239,8 @@ def login(
         "access_token": token,
         "token_type": "bearer"
     }
+
+
 @router.post("/forgot-password")
 async def forgot_password(email: str):
     cursor.execute(

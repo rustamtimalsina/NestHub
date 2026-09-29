@@ -261,6 +261,9 @@ for column, definition in (
     ("phone", "TEXT"),
     ("reset_token", "TEXT"),
     ("token_expiry", "TEXT"),
+     ("is_verified", "INTEGER DEFAULT 0"),
+    ("verify_token", "TEXT"),
+    ("verify_expiry", "TEXT"),
 ):
 
     ensure_column(

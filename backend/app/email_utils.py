@@ -51,3 +51,24 @@ Regards,
 NestHub Team
 """,
     )
+
+
+async def send_verification_email(email: str, token: str):
+    backend_url = os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
+    link = f"{backend_url}/users/verify?token={token}"
+
+    await send_email(
+        email,
+        "Verify your NestHub email",
+        f"""Hello,
+
+Thanks for signing up for NestHub. Click the link below to verify your email:
+
+{link}
+
+The link works for 24 hours. If you didn't sign up, ignore this email.
+
+Regards,
+NestHub Team
+""",
+    )
