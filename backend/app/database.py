@@ -41,6 +41,11 @@ else:
 # ============================================================
 # THREAD-SAFE CURSOR
 # ============================================================
+ID_COLUMN = (
+    "SERIAL PRIMARY KEY"
+    if DATABASE_TYPE == "postgres"
+    else "INTEGER PRIMARY KEY"
+)
 
 class ThreadSafeCursor:
     """
@@ -179,7 +184,7 @@ def ensure_column(
 # ============================================================
 
 cursor.execute(
-    """
+    f"""
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
         name TEXT NOT NULL,
@@ -199,7 +204,7 @@ cursor.execute(
 # ============================================================
 
 cursor.execute(
-    """
+    f"""
     CREATE TABLE IF NOT EXISTS properties (
         id INTEGER PRIMARY KEY,
         title TEXT,
@@ -223,7 +228,7 @@ cursor.execute(
 # ============================================================
 
 cursor.execute(
-    """
+    f"""
     CREATE TABLE IF NOT EXISTS favorites (
         id INTEGER PRIMARY KEY,
         user_email TEXT NOT NULL,
@@ -238,14 +243,14 @@ cursor.execute(
 # ============================================================
 
 cursor.execute(
-    """
+    f"""
     CREATE TABLE IF NOT EXISTS property_images (
         id INTEGER PRIMARY KEY,
         property_id INTEGER NOT NULL,
         image TEXT NOT NULL
     )
-    """
-)
+    """)
+
 
 
 # ============================================================
