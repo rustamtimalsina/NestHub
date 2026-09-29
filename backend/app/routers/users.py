@@ -190,13 +190,11 @@ async def forgot_password(email: str):
     connection.commit()
 
     try:
-        await (
-        send_reset_email(
-            email,
-            token
-        )
-        )
+        await send_reset_email(email, token)
     except Exception as error:
+        # Show the reason in the server terminal, never in the response
+        print(f"Reset email failed: {type(error).__name__}: {str(error)[:200]}")
+
         raise HTTPException(
             status_code=502,
             detail="Unable to send the password reset email. Please try again later.",
