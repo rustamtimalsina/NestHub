@@ -186,7 +186,7 @@ def ensure_column(
 cursor.execute(
     f"""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY,
+        id {ID_COLUMN},
         name TEXT NOT NULL,
         email TEXT UNIQUE NOT NULL,
         phone TEXT,
@@ -206,7 +206,7 @@ cursor.execute(
 cursor.execute(
     f"""
     CREATE TABLE IF NOT EXISTS properties (
-        id INTEGER PRIMARY KEY,
+        id {ID_COLUMN},
         title TEXT,
         description TEXT,
         city TEXT,
@@ -230,7 +230,7 @@ cursor.execute(
 cursor.execute(
     f"""
     CREATE TABLE IF NOT EXISTS favorites (
-        id INTEGER PRIMARY KEY,
+                id {ID_COLUMN},
         user_email TEXT NOT NULL,
         property_id INTEGER NOT NULL
     )
@@ -245,7 +245,7 @@ cursor.execute(
 cursor.execute(
     f"""
     CREATE TABLE IF NOT EXISTS property_images (
-        id INTEGER PRIMARY KEY,
+                id {ID_COLUMN},
         property_id INTEGER NOT NULL,
         image TEXT NOT NULL
     )
