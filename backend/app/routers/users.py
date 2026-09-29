@@ -98,9 +98,10 @@ def create_user(user: User):
         connection.commit()
 
     except Exception as error:
-        print("========== REGISTRATION ERROR ==========")
-        print("ERROR:", repr(error))
-        print("========================================")
+        connection.rollback()
+
+        # Log only the kind of error, never the data inside it
+        print(f"Registration failed: {type(error).__name__}")
 
         raise HTTPException(
             status_code=500,
