@@ -21,6 +21,7 @@ from app.services.property_service import (
 from fastapi import UploadFile, File
 import uuid
 from app.database import BASE_DIR
+from app.cloud import upload_image_bytes
 
 router = APIRouter(
     prefix="/properties",
@@ -235,13 +236,14 @@ async def upload_image(
     if not content:
         raise HTTPException(status_code=422, detail="Image file is empty.")
 
-    filename = f"{uuid.uuid4()}.{allowed_types[file.content_type]}"
-    upload_path = BASE_DIR / "uploads"
-    upload_path.mkdir(parents=True, exist_ok=True)
-    (upload_path / filename).write_bytes(content)
+    try:
+        url = upload_image_bytes(content)
+    except Exception as error:
+        print(f"Image upload failed: {type(error).__name__}")
+        raise HTTPException(status_code=502, detail="Image upload failed.")
 
     return {
-        "filename": filename
+        "filename": url
     }
 @router.post("/{property_id}/images")
 async def upload_property_images(
@@ -275,9 +277,6 @@ async def upload_property_images(
 
     filenames = []
 
-    upload_path = BASE_DIR / "uploads"
-    upload_path.mkdir(parents=True, exist_ok=True)
-
     allowed_types = {
         "image/jpeg": "jpg",
         "image/png": "png",
@@ -300,11 +299,13 @@ async def upload_property_images(
                 detail="Each image must be less than 5 MB."
             )
 
-        filename = f"{uuid.uuid4()}.{allowed_types[file.content_type]}"
+        try:
+            url = upload_image_bytes(content)
+        except Exception as error:
+            print(f"Image upload failed: {type(error).__name__}")
+            raise HTTPException(status_code=502, detail="Image upload failed.")
 
-        (upload_path / filename).write_bytes(content)
-
-        filenames.append(filename)
+        filenames.append(url)
 
     add_property_images(property_id, filenames)
 

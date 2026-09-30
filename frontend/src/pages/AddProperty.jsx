@@ -11,12 +11,25 @@ function AddProperty() {
   const [bedrooms, setBedrooms] = useState("");
   const [bathrooms, setBathrooms] = useState("");
   const [area, setArea] = useState("");
-  const [propertyType, setPropertyType] = useState("");
+    const [propertyType, setPropertyType] = useState("Apartment");
   const [status, setStatus] = useState("Available");
   const [image, setImage] = useState(null);
   
 const [preview, setPreview] = useState(null);
 const [loading, setLoading] = useState(false);
+const [isDragging, setIsDragging] = useState(false);
+
+function chooseFile(file) {
+  if (!file) return;
+
+  if (!file.type.startsWith("image/")) {
+    toast.error("Please choose an image file.");
+    return;
+  }
+
+  setImage(file);
+  setPreview(URL.createObjectURL(file));
+}
 
 const navigate = useNavigate();
 async function handleSubmit(e) {
@@ -238,7 +251,23 @@ setTimeout(() => {
             Property Image
           </label>
 
-          <label className="flex items-center justify-center w-full h-36 border-2 border-dashed border-blue-400 rounded-xl cursor-pointer hover:bg-blue-50 transition">
+          <label
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragging(false);
+              chooseFile(e.dataTransfer.files[0]);
+            }}
+            className={`flex items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition ${
+              isDragging
+                ? "border-blue-600 bg-blue-100"
+                : "border-blue-400 hover:bg-blue-50"
+            }`}
+          >
 
            <div className="text-center">
 
@@ -250,7 +279,7 @@ setTimeout(() => {
 
     {image
       ? image.name
-      : "Click to upload an image"}
+      : "Click or drag an image here"}
 
   </p>
 
@@ -260,14 +289,7 @@ setTimeout(() => {
   type="file"
   className="hidden"
   accept="image/*"
-  onChange={(e) => {
-    const file = e.target.files[0];
-
-    if (file) {
-      setImage(file);
-      setPreview(URL.createObjectURL(file));
-    }
-  }}
+    onChange={(e) => chooseFile(e.target.files[0])}
 />
 
           </label>

@@ -8,6 +8,7 @@ import {
   Home,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { getImageUrl } from "../utils/imageUrl";
 function PropertyCard({ property }) {
   return (
    <motion.div
@@ -23,7 +24,7 @@ function PropertyCard({ property }) {
 <img
   src={
     property.image
-      ? `${API_URL}/uploads/${property.image}`
+      ? getImageUrl(API_URL, property.image)
       : "https://placehold.co/600x400?text=No+Image"
   }
   alt={property.title}

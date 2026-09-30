@@ -10,6 +10,7 @@ import {
 } from "../services/propertyService";
 import PropertyCard from "../components/PropertyCard";
 import Swal from "sweetalert2";
+import { getImageUrl } from "../utils/imageUrl";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -321,7 +322,7 @@ async function removeImage(imageId) {
                       className="relative border rounded-lg overflow-hidden"
                     >
                       <img
-                        src={`${API_URL}/uploads/${image.image}`}
+                        src={getImageUrl(API_URL, image.image)}
                         alt=""
                         className="w-full h-24 object-cover"
                       />
