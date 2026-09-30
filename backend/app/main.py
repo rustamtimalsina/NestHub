@@ -98,5 +98,8 @@ app = CORSMiddleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+@app.get("/sentry-debug")
+def sentry_debug():
+    raise RuntimeError("Sentry live test - safe to ignore")
 
 
