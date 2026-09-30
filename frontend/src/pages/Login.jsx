@@ -7,8 +7,11 @@ import { House } from "lucide-react";
 
 function Login() {
   const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const status = searchParams.get("verified");
@@ -33,16 +36,15 @@ function Login() {
       await resendVerification(email.trim());
       toast.success("If that account needs verifying, a new link has been sent.");
     } catch (error) {
-      toast.error(
-        error.response?.data?.detail || "Could not send the email."
-      );
+      if (error.response?.status === 429) {
+        toast.error("Too many attempts. Please wait a minute and try again.");
+      } else {
+        toast.error(
+          error.response?.data?.detail || "Could not send the email."
+        );
+      }
     }
   }
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -53,16 +55,18 @@ function Login() {
 
       localStorage.setItem("token", data.access_token);
 
-  toast.success("Welcome back!");
-setLoading(false);
-setTimeout(() => {
-
-  navigate("/");
-  window.location.reload();
-}, 1000);
+      toast.success("Welcome back!");
+      setLoading(false);
+      setTimeout(() => {
+        navigate("/");
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       setLoading(false);
-            if (error.response?.status === 403) {
+
+      if (error.response?.status === 429) {
+        toast.error("Too many attempts. Please wait a minute and try again.");
+      } else if (error.response?.status === 403) {
         setNeedsVerification(true);
         toast.error(
           error.response?.data?.detail ||
@@ -71,6 +75,7 @@ setTimeout(() => {
       } else {
         toast.error("Invalid email or password.");
       }
+
       console.error(error);
     }
   }

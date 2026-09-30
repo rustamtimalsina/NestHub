@@ -18,10 +18,14 @@ async function handleSubmit(e) {
 
     toast.success(data.message);
 
-  } catch (error) {
-    toast.error(
-      error.response?.data?.detail || "Something went wrong."
-    );
+   } catch (error) {
+    if (error.response?.status === 429) {
+      toast.error("Too many attempts. Please wait a minute and try again.");
+    } else {
+      toast.error(
+        error.response?.data?.detail || "Something went wrong."
+      );
+    }
   }
 }
 

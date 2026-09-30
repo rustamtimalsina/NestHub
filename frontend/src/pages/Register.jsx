@@ -71,16 +71,21 @@ if (password !== confirmPassword) {
       setTimeout(() => {
         navigate("/login");
       }, 3000);
-    }catch (error) {
-  setLoading(false);
+        } catch (error) {
+      setLoading(false);
 
-  console.error(error);
+      console.error(error);
 
-  const message =
-    error.response?.data?.detail || "Registration failed.";
+      if (error.response?.status === 429) {
+        toast.error("Too many attempts. Please wait a minute and try again.");
+        return;
+      }
 
-  toast.error(message);
-}
+      const message =
+        error.response?.data?.detail || "Registration failed.";
+
+      toast.error(message);
+    }
   }
 
   return (
