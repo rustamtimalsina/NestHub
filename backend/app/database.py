@@ -15,8 +15,19 @@ if DATABASE_URL:
     import psycopg2
     from psycopg2.extras import DictCursor
 
-    connection = psycopg2.connect(DATABASE_URL)
-    cursor = connection.cursor(cursor_factory=DictCursor)
+    RECONNECT_ERRORS = (psycopg2.OperationalError, psycopg2.InterfaceError)
+
+    def open_postgres():
+        conn = psycopg2.connect(
+            DATABASE_URL,
+            keepalives=1,
+            keepalives_idle=30,
+            keepalives_interval=10,
+            keepalives_count=5,
+        )
+        return conn, conn.cursor(cursor_factory=DictCursor)
+
+    connection, cursor = open_postgres()
 
     DATABASE_TYPE = "postgres"
 
@@ -36,6 +47,7 @@ else:
     cursor = connection.cursor()
 
     DATABASE_TYPE = "sqlite"
+    RECONNECT_ERRORS = ()
 
 
 # ============================================================
@@ -53,8 +65,9 @@ class ThreadSafeCursor:
     SQLite and PostgreSQL.
     """
 
-    def __init__(self, wrapped_cursor):
+    def __init__(self, wrapped_cursor, raw_connection):
         self._cursor = wrapped_cursor
+        self._raw_connection = raw_connection
         self._lock = threading.RLock()
         self._owner = None
 
@@ -72,6 +85,12 @@ class ThreadSafeCursor:
 
         return query
 
+    def __init__(self, wrapped_cursor, raw_connection):
+        self._cursor = wrapped_cursor
+        self._raw_connection = raw_connection
+        self._lock = threading.RLock()
+        self._owner = None
+
     def execute(self, query, parameters=()):
         current_thread = threading.get_ident()
 
@@ -81,13 +100,22 @@ class ThreadSafeCursor:
 
         try:
             query = self._convert_query(query)
-            self._cursor.execute(query, parameters)
+
+            try:
+                self._cursor.execute(query, parameters)
+            except RECONNECT_ERRORS:
+                # The database went to sleep and the connection died.
+                # Open a new one and try the same command once more.
+                print("Database connection lost, reconnecting...")
+                self._raw_connection, self._cursor = open_postgres()
+                self._cursor.execute(query, parameters)
 
         except Exception:
             self.release()
             raise
 
         return self
+
 
     def fetchone(self):
         try:
@@ -108,7 +136,7 @@ class ThreadSafeCursor:
 
 
 # Replace the raw cursor with our compatible cursor
-cursor = ThreadSafeCursor(cursor)
+cursor = ThreadSafeCursor(cursor, connection)
 
 
 # ============================================================
@@ -117,25 +145,23 @@ cursor = ThreadSafeCursor(cursor)
 
 class ThreadSafeConnection:
 
-    def __init__(self, wrapped_connection, wrapped_cursor):
-        self._connection = wrapped_connection
+    def __init__(self, wrapped_cursor):
         self._cursor = wrapped_cursor
 
     def commit(self):
         try:
-            self._connection.commit()
+            self._cursor._raw_connection.commit()
         finally:
             self._cursor.release()
 
     def rollback(self):
         try:
-            self._connection.rollback()
+            self._cursor._raw_connection.rollback()
         finally:
             self._cursor.release()
 
 
-connection = ThreadSafeConnection(connection, cursor)
-
+connection = ThreadSafeConnection(cursor)
 
 # ============================================================
 # DATABASE HELPERS
