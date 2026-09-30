@@ -11,6 +11,28 @@ from app.routers.favorites import router as favorites_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pathlib import Path
+import os
+import sentry_sdk
+
+
+def scrub_event(event, hint):
+    # Remove web address details, cookies and form data before sending
+    request = event.get("request")
+    if request:
+        request.pop("query_string", None)
+        request.pop("cookies", None)
+        request.pop("data", None)
+        if "url" in request:
+            request["url"] = request["url"].split("?")[0]
+    return event
+
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    send_default_pii=False,
+    traces_sample_rate=0.0,
+    before_send=scrub_event,
+)
 
 app = FastAPI()
 app.state.limiter = limiter

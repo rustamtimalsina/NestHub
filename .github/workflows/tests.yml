@@ -26,4 +26,5 @@ jobs:
       - name: Run tests
         env:
           SECRET_KEY: ci-test-secret-not-used-anywhere-else
+          
         run: python -m pytest -v
