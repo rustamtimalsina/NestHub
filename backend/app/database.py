@@ -40,7 +40,7 @@ if DATABASE_URL:
 
 else:
     sqlite_connection = sqlite3.connect(
-        BASE_DIR / "nesthub.db",
+        os.getenv("SQLITE_PATH", BASE_DIR / "nesthub.db"),
         check_same_thread=False
     )
 

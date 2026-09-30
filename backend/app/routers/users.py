@@ -218,8 +218,6 @@ def login(
             detail="Invalid email or password"
         )
 
-    print("========== LOGIN CALLED ==========")
-    print("USER ROLE:", db_user["role"])
     if not verify_password(
         form_data.password,
         db_user["password"]
