@@ -1,16 +1,48 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { loginUser } from "../services/userService";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { loginUser, resendVerification } from "../services/userService";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { House } from "lucide-react";
 
 function Login() {
   const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+  const [needsVerification, setNeedsVerification] = useState(false);
+
+  useEffect(() => {
+    const status = searchParams.get("verified");
+
+    if (status === "1") {
+      toast.success("Email verified! You can now log in.");
+    } else if (status === "expired" || status === "invalid") {
+      setNeedsVerification(true);
+      toast.error(
+        "That verification link is invalid or has expired. Enter your email below and request a new one."
+      );
+    }
+  }, [searchParams]);
+
+  async function handleResend() {
+    if (!email.trim()) {
+      toast.error("Enter your email address first.");
+      return;
+    }
+
+    try {
+      await resendVerification(email.trim());
+      toast.success("If that account needs verifying, a new link has been sent.");
+    } catch (error) {
+      toast.error(
+        error.response?.data?.detail || "Could not send the email."
+      );
+    }
+  }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -30,7 +62,15 @@ setTimeout(() => {
 }, 1000);
     } catch (error) {
       setLoading(false);
-      toast.error("Invalid email or password.");
+            if (error.response?.status === 403) {
+        setNeedsVerification(true);
+        toast.error(
+          error.response?.data?.detail ||
+            "Please verify your email before logging in."
+        );
+      } else {
+        toast.error("Invalid email or password.");
+      }
       console.error(error);
     }
   }
@@ -124,6 +164,14 @@ setTimeout(() => {
 >
   Forgot Password?
 </p>
+          {needsVerification && (
+            <p
+              onClick={handleResend}
+              className="text-center text-blue-600 cursor-pointer hover:underline mb-6"
+            >
+              Resend verification email
+            </p>
+          )}
 
          <motion.button
   whileHover={!loading ? { scale: 1.03 } : {}}

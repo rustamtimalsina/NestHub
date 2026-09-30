@@ -38,3 +38,10 @@ export const resetPassword = async (token, password) => {
 
   return response.data;
 };
+export const resendVerification = async (email) => {
+  const response = await api.post(
+    `/users/resend-verification?email=${encodeURIComponent(email)}`
+  );
+
+  return response.data;
+};

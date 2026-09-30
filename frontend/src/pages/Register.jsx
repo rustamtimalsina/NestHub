@@ -65,12 +65,12 @@ if (password !== confirmPassword) {
         role: "user",
       });
 
-      toast.success("Registration successful!");
+            toast.success("Account created! Check your email to verify your account.");
       setLoading(false);
 
       setTimeout(() => {
         navigate("/login");
-      }, 1000);
+      }, 3000);
     }catch (error) {
   setLoading(false);
 
