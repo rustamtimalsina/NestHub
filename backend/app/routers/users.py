@@ -17,10 +17,13 @@ router = APIRouter(
 )
 from app.security.oauth2 import verify_token
 from app.security.admin import verify_admin
+from fastapi import Request
+from app.limiter import limiter
 
 
 @router.post("/")
-async def create_user(user: User):
+@limiter.limit("5/minute")
+async def create_user(request: Request, user: User):
     # Validate name
     if len(user.name.strip()) < 3:
       raise HTTPException(
@@ -159,7 +162,8 @@ def verify_email(token: str):
 
 
 @router.post("/resend-verification")
-async def resend_verification(email: str):
+@limiter.limit("3/minute")
+async def resend_verification(request: Request, email: str):
     reply = {"message": "If that account exists and is not verified, a new link has been sent."}
 
     cursor.execute(
@@ -193,7 +197,9 @@ async def resend_verification(email: str):
     return reply
 
 @router.post("/login")
+@limiter.limit("10/minute")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends()
 ):
     cursor.execute(
@@ -242,7 +248,8 @@ def login(
 
 
 @router.post("/forgot-password")
-async def forgot_password(email: str):
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, email: str):
     cursor.execute(
         """
         SELECT * FROM users
