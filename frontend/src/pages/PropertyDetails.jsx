@@ -6,7 +6,8 @@ import {
   getSimilarProperties,
   addFavorite,
   removeFavorite,
-  checkFavorite
+  checkFavorite,
+  sendInquiry,
 } from "../services/propertyService";
 import {
   MapPin,
@@ -33,6 +34,8 @@ const [showContact, setShowContact] = useState(false);
 const [similarProperties, setSimilarProperties] = useState([]);
 const [images, setImages] = useState([]);
 const [selectedImage, setSelectedImage] = useState("");
+const [inquiryText, setInquiryText] = useState("");
+const [sendingInquiry, setSendingInquiry] = useState(false);
 useEffect(() => {
     let active = true;
 
@@ -96,6 +99,31 @@ async function handleFavorite() {
 
     alert("Please login first.");
 
+  }
+}
+async function handleSendInquiry() {
+  if (inquiryText.trim().length < 10) {
+    alert("Please write at least 10 characters.");
+    return;
+  }
+
+  setSendingInquiry(true);
+
+  try {
+    const data = await sendInquiry(property.id, inquiryText.trim());
+    alert(data.message);
+    setInquiryText("");
+    setShowContact(false);
+  } catch (error) {
+    if (error.response?.status === 401) {
+      alert("Please login first.");
+    } else if (error.response?.status === 429) {
+      alert("Too many messages. Please try again later.");
+    } else {
+      alert(error.response?.data?.detail || "Could not send your message.");
+    }
+  } finally {
+    setSendingInquiry(false);
   }
 }
 
@@ -450,6 +478,32 @@ return (
           >
             Close
           </button>
+                    <div className="mt-6">
+            <p className="text-gray-500 text-sm mb-2">
+              Send a message to the owner
+            </p>
+
+            <textarea
+              rows="3"
+              maxLength={1000}
+              placeholder="Hello, I'm interested in this property..."
+              className="w-full border border-gray-300 rounded-lg p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              value={inquiryText}
+              onChange={(e) => setInquiryText(e.target.value)}
+            />
+
+            <button
+              onClick={handleSendInquiry}
+              disabled={sendingInquiry}
+              className={`w-full mt-3 py-3 rounded-xl font-semibold text-white transition ${
+                sendingInquiry
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {sendingInquiry ? "Sending..." : "Send Message"}
+            </button>
+          </div>
 
         </div>
 

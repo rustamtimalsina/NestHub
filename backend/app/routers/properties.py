@@ -17,7 +17,10 @@ from app.services.property_service import (
     get_my_properties,
     set_cover_image,
 )
-
+from fastapi import Request
+from pydantic import BaseModel
+from app.limiter import limiter
+from app.email_utils import send_inquiry_email
 from fastapi import UploadFile, File
 import uuid
 from app.database import BASE_DIR
@@ -358,3 +361,69 @@ def make_cover_image(
     return {
         "message": "Cover image updated successfully."
     }
+class InquiryRequest(BaseModel):
+    message: str
+
+
+@router.post("/{property_id}/inquiry")
+@limiter.limit("5/hour")
+async def send_inquiry(
+    request: Request,
+    property_id: int,
+    data: InquiryRequest,
+    current_user: str = Depends(verify_token),
+):
+    message = data.message.strip()
+
+    if len(message) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Message must be at least 10 characters."
+        )
+
+    if len(message) > 1000:
+        raise HTTPException(
+            status_code=400,
+            detail="Message must be 1000 characters or fewer."
+        )
+
+    cursor.execute(
+        "SELECT title, owner_email FROM properties WHERE id = ?",
+        (property_id,)
+    )
+    prop = cursor.fetchone()
+
+    if prop is None:
+        raise HTTPException(status_code=404, detail="Property not found")
+
+    if prop["owner_email"] == current_user:
+        raise HTTPException(
+            status_code=400,
+            detail="You cannot send an inquiry about your own listing."
+        )
+
+    cursor.execute(
+        "SELECT name FROM users WHERE email = ?",
+        (current_user,)
+    )
+    buyer = cursor.fetchone()
+
+    if buyer is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    try:
+        await send_inquiry_email(
+            prop["owner_email"],
+            prop["title"],
+            buyer["name"],
+            current_user,
+            message,
+        )
+    except Exception as error:
+        print(f"Inquiry email failed: {type(error).__name__}")
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to send your message. Please try again later."
+        )
+
+    return {"message": "Your message has been sent to the owner."}

@@ -225,3 +225,10 @@ export const uploadPropertyImages = async (propertyId, files) => {
 
   return response.data;
 };
+export const sendInquiry = async (propertyId, message) => {
+  const response = await api.post(`/properties/${propertyId}/inquiry`, {
+    message,
+  });
+
+  return response.data;
+};
