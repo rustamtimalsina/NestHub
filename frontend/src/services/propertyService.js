@@ -232,3 +232,8 @@ export const sendInquiry = async (propertyId, message) => {
 
   return response.data;
 };
+export const getOwnerContact = async (propertyId) => {
+  const response = await api.get(`/properties/${propertyId}/contact`);
+
+  return response.data;
+};

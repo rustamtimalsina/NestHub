@@ -8,6 +8,7 @@ import {
   removeFavorite,
   checkFavorite,
   sendInquiry,
+  getOwnerContact,
 } from "../services/propertyService";
 import {
   MapPin,
@@ -36,6 +37,7 @@ const [images, setImages] = useState([]);
 const [selectedImage, setSelectedImage] = useState("");
 const [inquiryText, setInquiryText] = useState("");
 const [sendingInquiry, setSendingInquiry] = useState(false);
+const [ownerPhone, setOwnerPhone] = useState("");
 useEffect(() => {
     let active = true;
 
@@ -124,6 +126,19 @@ async function handleSendInquiry() {
     }
   } finally {
     setSendingInquiry(false);
+  }
+}
+async function openContact() {
+  setShowContact(true);
+
+  // Only logged-in users can see the owner's phone number
+  if (!localStorage.getItem("token")) return;
+
+  try {
+    const data = await getOwnerContact(property.id);
+    setOwnerPhone(data.owner_phone || "");
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -345,9 +360,9 @@ return (
   </span>
 </button>
          <button
-  onClick={() => {
+   onClick={() => {
     if (property.status === "Available") {
-      setShowContact(true);
+      openContact();
     }
   }}
   disabled={property.status !== "Available"}
@@ -374,136 +389,96 @@ return (
 
       </div>
 
-    {showContact && (
+          {showContact && (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
 
         <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
 
           <h2 className="text-3xl font-bold mb-6 text-center">
-            📞 Contact Owner
+            ✉️ Contact Owner
           </h2>
 
-          <div className="space-y-4">
+          <div className="mb-6">
+            <p className="text-gray-500 text-sm">Property</p>
+            <p className="font-semibold text-lg">{property.title}</p>
 
-            <div>
-              <p className="text-gray-500 text-sm">
-                Property
-              </p>
-
-              <p className="font-semibold text-lg">
-                {property.title}
-              </p>
-            </div>
-
-          <div className="space-y-4">
-
-  <div>
-    <p className="text-gray-500 text-sm">
-      Owner Name
-    </p>
-
-    <p className="font-semibold text-lg">
-      {property.owner_name}
-    </p>
-  </div>
-
-  <div>
-    <p className="text-gray-500 text-sm">
-      Email
-    </p>
-
-    <p className="font-semibold break-all">
-      {property.owner_email}
-    </p>
-  </div>
-
-  <div>
-    <p className="text-gray-500 text-sm">
-      Phone
-    </p>
-
-    <p className="font-semibold">
-      {property.owner_phone || "Not Available"}
-    </p>
-  </div>
-
-</div>
-
+            <p className="text-gray-500 text-sm mt-3">Owner</p>
+            <p className="font-semibold">{property.owner_name}</p>
           </div>
 
-         <div className="grid grid-cols-3 gap-3 mt-8">
+          {localStorage.getItem("token") ? (
+            <>
+              {ownerPhone && (
+                <div className="mb-6">
+                  <p className="text-gray-500 text-sm">Phone</p>
+                  <p className="font-semibold mb-3">{ownerPhone}</p>
 
-  {property.owner_phone && (
-    <>
-      <button
-        onClick={() => window.open(`tel:${property.owner_phone}`)}
-        className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition"
-      >
-        📞 Call
-      </button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => window.open(`tel:${ownerPhone}`)}
+                      className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition"
+                    >
+                      📞 Call
+                    </button>
 
-      <button
-        onClick={() =>
-          window.open(
-            `https://wa.me/977${property.owner_phone}`,
-            "_blank"
-          )
-        }
-        className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold transition"
-      >
-        💬 WhatsApp
-      </button>
-    </>
-  )}
+                    <button
+                      onClick={() =>
+                        window.open(`https://wa.me/977${ownerPhone}`, "_blank")
+                      }
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold transition"
+                    >
+                      💬 WhatsApp
+                    </button>
+                  </div>
+                </div>
+              )}
 
-  <button
-    onClick={() =>
-      window.open(
-        `https://mail.google.com/mail/?view=cm&fs=1&to=${property.owner_email}&su=${encodeURIComponent(
-          `Inquiry about ${property.title}`
-        )}`,
-        "_blank"
-      )
-    }
-    className="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition"
-  >
-    📧 Email
-  </button>
+              <p className="text-gray-500 text-sm mb-2">
+                Send a message to the owner
+              </p>
 
-</div>
+              <textarea
+                rows="4"
+                maxLength={1000}
+                placeholder="Hello, I'm interested in this property..."
+                className="w-full border border-gray-300 rounded-lg p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                value={inquiryText}
+                onChange={(e) => setInquiryText(e.target.value)}
+              />
+
+              <button
+                onClick={handleSendInquiry}
+                disabled={sendingInquiry}
+                className={`w-full mt-3 py-3 rounded-xl font-semibold text-white transition ${
+                  sendingInquiry
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {sendingInquiry ? "Sending..." : "Send Message"}
+              </button>
+            </>
+          ) : (
+            <div className="text-center bg-gray-50 border border-gray-200 rounded-xl p-6">
+              <p className="text-gray-600 mb-4">
+                Log in to see the owner's phone number and send a message.
+              </p>
+
+              <Link
+                to="/login"
+                className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition"
+              >
+                Login
+              </Link>
+            </div>
+          )}
 
           <button
             onClick={() => setShowContact(false)}
-            className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl font-semibold transition"
+            className="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-semibold transition"
           >
             Close
           </button>
-                    <div className="mt-6">
-            <p className="text-gray-500 text-sm mb-2">
-              Send a message to the owner
-            </p>
-
-            <textarea
-              rows="3"
-              maxLength={1000}
-              placeholder="Hello, I'm interested in this property..."
-              className="w-full border border-gray-300 rounded-lg p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              value={inquiryText}
-              onChange={(e) => setInquiryText(e.target.value)}
-            />
-
-            <button
-              onClick={handleSendInquiry}
-              disabled={sendingInquiry}
-              className={`w-full mt-3 py-3 rounded-xl font-semibold text-white transition ${
-                sendingInquiry
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              {sendingInquiry ? "Sending..." : "Send Message"}
-            </button>
-          </div>
 
         </div>
 

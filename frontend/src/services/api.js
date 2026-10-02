@@ -17,7 +17,15 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    const url = error.config?.url || "";
+    const hadToken = !!localStorage.getItem("token");
+
+    // Wrong password at login must not trigger a redirect
+    const isLogin = url.includes("/users/login");
+
+    if (status === 401 && hadToken && !isLogin) {
+      // The saved login expired: clear it and ask the user to log in again
       localStorage.removeItem("token");
       window.location.href = "/login";
     }

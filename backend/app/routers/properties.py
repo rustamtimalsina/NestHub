@@ -143,7 +143,13 @@ def get_public_property(property_id: int):
             detail="Property not found"
         )
 
-    return dict(property)
+    result = dict(property)
+
+    # Never send the owner's contact details to the public
+    result.pop("owner_email", None)
+    result.pop("owner_phone", None)
+
+    return result
 
 @router.get("/recent")
 def recent_properties():\
@@ -427,3 +433,28 @@ async def send_inquiry(
         )
 
     return {"message": "Your message has been sent to the owner."}
+@router.get("/{property_id}/contact")
+@limiter.limit("30/hour")
+def get_owner_contact(
+    request: Request,
+    property_id: int,
+    current_user: str = Depends(verify_token),
+):
+    cursor.execute(
+        """
+        SELECT users.name AS owner_name, users.phone AS owner_phone
+        FROM properties
+        JOIN users ON properties.owner_email = users.email
+        WHERE properties.id = ?
+        """,
+        (property_id,)
+    )
+    row = cursor.fetchone()
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Property not found")
+
+    return {
+        "owner_name": row["owner_name"],
+        "owner_phone": row["owner_phone"],
+    }
