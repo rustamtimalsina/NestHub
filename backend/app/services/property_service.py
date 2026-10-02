@@ -191,14 +191,7 @@ def get_all_properties(page, limit, sort, city, property_type):
     query = """
         SELECT *
         FROM properties
-        WHERE status = 'Available'
-        AND id NOT IN (
-            SELECT id
-            FROM properties
-            WHERE status = 'Available'
-            ORDER BY id DESC
-            LIMIT 3
-        )
+        WHERE 1=1
     """
 
     params = []
