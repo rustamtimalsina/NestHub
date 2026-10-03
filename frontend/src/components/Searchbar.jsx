@@ -4,10 +4,9 @@ function SearchBar() {
   const [keyword, setKeyword] = useState("");
   const navigate = useNavigate();
   const handleSearch = () => {
-  console.log("Searching:", keyword);
 
   if (keyword.trim() !== "") {
-    navigate(`/properties?keyword=${keyword}`);
+    navigate(`/properties?keyword=${encodeURIComponent(keyword.trim())}`);
   }
 };
   return (
@@ -19,7 +18,7 @@ function SearchBar() {
 </h2>
 
 <p className="text-center text-gray-500 mb-8">
-  Search thousands of verified properties across Nepal.
+    Search properties across Nepal.
 </p>
 
         <form

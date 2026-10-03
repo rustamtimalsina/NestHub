@@ -70,7 +70,7 @@ async function handleSaveEdit() {
 
   if (loading) {
     return (
-      <div className="p-8">
+          <div className="p-4 md:p-8">
         <p>Loading properties...</p>
       </div>
     );
@@ -144,6 +144,23 @@ async function handleSaveEdit() {
         placeholder="Property Type"
         className="border rounded-lg p-3"
       />
+            <select
+        value={editingProperty.status || "Available"}
+        onChange={(e) =>
+          setEditingProperty({
+            ...editingProperty,
+            status: e.target.value,
+          })
+        }
+        className="border rounded-lg p-3"
+      >
+        <option value="Available">Available</option>
+        <option value="Sold">Sold</option>
+        <option value="Rented">Rented</option>
+        <option value="Pending">Pending</option>
+      </select>
+
+
 
     </div>
 
@@ -164,8 +181,8 @@ async function handleSaveEdit() {
     </div>
   </div>
 )}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl shadow-lg overflow-x-auto">
+        <table className="w-full min-w-[800px]">
           <thead className="bg-gray-100">
             <tr>
               <th className="text-left p-4">Title</th>

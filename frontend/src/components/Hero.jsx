@@ -26,8 +26,8 @@ function Hero() {
           </h1>
 
           <p className="mt-6 text-base sm:text-lg md:text-xl text-gray-600 leading-8 max-w-xl">
-            Discover thousands of verified properties across Nepal.
-            Buy, rent, and sell with confidence.
+            Browse properties across Nepal, message owners directly,
+            and list your own, with email-verified accounts.
           </p>
 
      <motion.button

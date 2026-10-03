@@ -55,7 +55,7 @@ useEffect(() => {
 
            <>
   {/* Desktop Menu */}
-  <div className="hidden md:flex items-center gap-3 text-gray-700 font-medium">
+  <div className="hidden xl:flex items-center gap-3 text-gray-700 font-medium">
           <Link
   to="/"
   className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
@@ -125,15 +125,17 @@ useEffect(() => {
     </Link>
   </>
 )}
-<div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-xl">
-    <CircleUserRound
-        size={22}
-        className="text-blue-600"
-    />
+<div
+  className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+    user?.role === "admin" ? "bg-purple-100" : "bg-blue-50"
+  }`}
+>
+  <CircleUserRound
+    size={22}
+    className={user?.role === "admin" ? "text-purple-600" : "text-blue-600"}
+  />
 
-    <span>
-        User
-    </span>
+  <span>{user?.role === "admin" ? "Admin" : "User"}</span>
 </div>
 
               <button
@@ -170,15 +172,36 @@ useEffect(() => {
         </div>
     {/* Mobile Menu Button */}
 <button
-  className="md:hidden text-gray-700"
+  className="xl:hidden text-gray-700"
   onClick={() => setMenuOpen(!menuOpen)}
 >
   {menuOpen ? <X size={30} /> : <Menu size={30} />}
 </button>
 {menuOpen && (
-  <div className="absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg md:hidden">
+  <div className="absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg xl:hidden">
 
     <div className="flex flex-col p-4 space-y-2">
+      {token && (
+        <div
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
+            user?.role === "admin" ? "bg-purple-100" : "bg-blue-50"
+          }`}
+        >
+          <CircleUserRound
+            size={24}
+            className={user?.role === "admin" ? "text-purple-600" : "text-blue-600"}
+          />
+
+          <div className="min-w-0">
+            <p className="font-semibold leading-tight truncate">
+              {user?.name || "User"}
+            </p>
+            <p className="text-xs text-gray-500">
+              {user?.role === "admin" ? "Admin" : "User"}
+            </p>
+          </div>
+        </div>
+      )}
 
       <Link
   to="/"
@@ -236,12 +259,20 @@ useEffect(() => {
       Admin Dashboard
     </Link>
 
-    <Link
+        <Link
       to="/admin/users"
       onClick={() => setMenuOpen(false)}
       className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
     >
       User Management
+    </Link>
+
+    <Link
+      to="/admin/properties"
+      onClick={() => setMenuOpen(false)}
+      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
+    >
+      Property Management
     </Link>
   </>
 )}
