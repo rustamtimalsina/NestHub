@@ -291,7 +291,6 @@ def get_recent_properties():
 
     return [dict(property) for property in properties]
 def get_similar_properties(property_id):
-
     cursor.execute(
         """
         SELECT city, property_type
@@ -300,7 +299,6 @@ def get_similar_properties(property_id):
         """,
         (property_id,)
     )
-
     current = cursor.fetchone()
 
     if current is None:
@@ -313,16 +311,25 @@ def get_similar_properties(property_id):
         WHERE id != ?
         AND status = 'Available'
         AND (
-            city = ?
+            LOWER(city) = LOWER(?)
             OR property_type = ?
         )
-        ORDER BY id DESC
+        ORDER BY
+            CASE
+                WHEN property_type = ? AND LOWER(city) = LOWER(?) THEN 0
+                WHEN property_type = ? THEN 1
+                ELSE 2
+            END,
+            id DESC
         LIMIT 3
         """,
         (
             property_id,
             current["city"],
-            current["property_type"]
+            current["property_type"],
+            current["property_type"],
+            current["city"],
+            current["property_type"],
         )
     )
 

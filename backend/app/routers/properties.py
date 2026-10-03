@@ -30,6 +30,10 @@ router = APIRouter(
     prefix="/properties",
     tags=["Properties"]
 )
+def hide_owner_email(items):
+    for item in items:
+        item.pop("owner_email", None)
+    return items
 
 
 @router.post("/")
@@ -67,13 +71,12 @@ def get_properties(
     if not 1 <= limit <= 100:
         raise HTTPException(status_code=422, detail="limit must be between 1 and 100")
 
-    return get_all_properties(
-        page,
-        limit,
-        sort,
-        city,
-        property_type
-    )
+    result = get_all_properties(page, limit, sort, city, property_type)
+
+    for item in result["properties"]:
+          item.pop("owner_email", None)
+
+    return result
 @router.get("/cities")
 def get_cities():
 
@@ -117,7 +120,7 @@ def my_properties(
 @router.get("/search")
 def search(keyword: str):
 
-    return search_properties(keyword)
+    return hide_owner_email(search_properties(keyword))
 @router.get("/public/{property_id}")
 def get_public_property(property_id: int):
 
@@ -152,8 +155,8 @@ def get_public_property(property_id: int):
     return result
 
 @router.get("/recent")
-def recent_properties():\
-    return get_recent_properties()
+def recent_properties():
+    return hide_owner_email(get_recent_properties())
 
 @router.get("/{property_id}")
 def get_property(property_id: int):
@@ -165,11 +168,14 @@ def get_property(property_id: int):
             detail="Property not found"
         )
 
+    prop.pop("owner_email", None)
+    prop.pop("owner_phone", None)
+
     return prop
 
 @router.get("/{property_id}/similar")
 def similar_properties(property_id: int):
-    return get_similar_properties(property_id)
+    return hide_owner_email(get_similar_properties(property_id))
 
 @router.get("/{property_id}/images")
 def property_images(property_id: int):
