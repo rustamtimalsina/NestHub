@@ -9,6 +9,7 @@ import Properties from "./pages/Properties";
 import AddProperty from "./pages/AddProperty";
 import Favorites from "./pages/Favorites";
 import MyProperties from "./pages/MyProperties";
+import Profile from "./pages/Profile";
 import Navbar from "./components/Navbar"; 
 import PropertyDetails from "./pages/PropertyDetails";
 import EditProperty from "./pages/EditProperty";
@@ -88,6 +89,14 @@ function App() {
   element={
     <ProtectedRoute>
       <EditProperty />
+    </ProtectedRoute>
+  }
+/>
+        <Route
+  path="/profile"
+  element={
+    <ProtectedRoute>
+      <Profile />
     </ProtectedRoute>
   }
 />

@@ -125,8 +125,9 @@ useEffect(() => {
     </Link>
   </>
 )}
-<div
-  className={`flex items-center gap-2 px-4 py-2 rounded-xl ${
+<Link
+  to="/profile"
+  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition hover:opacity-80 ${
     user?.role === "admin" ? "bg-purple-100" : "bg-blue-50"
   }`}
 >
@@ -136,7 +137,7 @@ useEffect(() => {
   />
 
   <span>{user?.role === "admin" ? "Admin" : "User"}</span>
-</div>
+</Link>
 
               <button
                 onClick={handleLogout}
@@ -182,7 +183,9 @@ useEffect(() => {
 
     <div className="flex flex-col p-4 space-y-2">
       {token && (
-        <div
+        <Link
+          to="/profile"
+          onClick={() => setMenuOpen(false)}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
             user?.role === "admin" ? "bg-purple-100" : "bg-blue-50"
           }`}
@@ -197,10 +200,10 @@ useEffect(() => {
               {user?.name || "User"}
             </p>
             <p className="text-xs text-gray-500">
-              {user?.role === "admin" ? "Admin" : "User"}
+              {user?.role === "admin" ? "Admin" : "User"} · View profile
             </p>
           </div>
-        </div>
+        </Link>
       )}
 
       <Link

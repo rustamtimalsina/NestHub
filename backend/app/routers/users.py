@@ -375,3 +375,60 @@ def get_me(
         )
 
     return dict(user)
+from pydantic import BaseModel
+
+
+class ProfileUpdate(BaseModel):
+    name: str
+    phone: str
+
+
+@router.put("/me")
+@limiter.limit("20/hour")
+def update_me(
+    request: Request,
+    data: ProfileUpdate,
+    current_user: str = Depends(verify_token),
+):
+    name = data.name.strip()
+    phone = data.phone.strip()
+
+    if len(name) < 3:
+        raise HTTPException(
+            status_code=400,
+            detail="Name must be at least 3 characters."
+        )
+
+    if not re.fullmatch(r"\d{10}", phone):
+        raise HTTPException(
+            status_code=400,
+            detail="Phone number must contain exactly 10 digits."
+        )
+
+    # The phone number must not belong to someone else
+    cursor.execute(
+        "SELECT id FROM users WHERE phone = ? AND email != ?",
+        (phone, current_user)
+    )
+
+    if cursor.fetchone():
+        raise HTTPException(
+            status_code=400,
+            detail="Phone number already exists."
+        )
+
+    try:
+        cursor.execute(
+            "UPDATE users SET name = ?, phone = ? WHERE email = ?",
+            (name, phone, current_user)
+        )
+        connection.commit()
+    except Exception as error:
+        connection.rollback()
+        print(f"Profile update failed: {type(error).__name__}")
+        raise HTTPException(
+            status_code=500,
+            detail="Could not update your profile."
+        )
+
+    return {"message": "Profile updated successfully."}

@@ -45,3 +45,12 @@ export const resendVerification = async (email) => {
 
   return response.data;
 };
+export const getMe = async () => {
+  const response = await api.get("/users/me");
+  return response.data;
+};
+
+export const updateProfile = async (name, phone) => {
+  const response = await api.put("/users/me", { name, phone });
+  return response.data;
+};
