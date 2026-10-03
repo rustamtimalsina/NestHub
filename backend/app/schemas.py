@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 class Property(BaseModel):
     title: str = Field(..., max_length=100)
@@ -11,6 +11,16 @@ class Property(BaseModel):
     property_type: str = Field(..., max_length=50)
     status: str = "Available"   # ← Add this line
     image: str = Field(..., min_length=1, max_length=255)
+    @field_validator("city")
+    @classmethod
+    def clean_city(cls, value):
+        # "  lalitpur " -> "Lalitpur"
+        cleaned = " ".join(value.split()).title()
+
+        if not cleaned:
+            raise ValueError("City cannot be empty.")
+
+        return cleaned
 
 class User(BaseModel):
     name: str
