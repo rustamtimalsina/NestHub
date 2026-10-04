@@ -190,4 +190,4 @@ _Add how buyers can reach you, and what your support includes (for example, answ
 
 ## License
 
-_Choose a license and add a `LICENSE` file. State clearly what buyers may and may not do, for example whether they can use the code in client projects or resell it._
+See the `LICENSE` file. One license covers one end project.
