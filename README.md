@@ -191,4 +191,4 @@ _Add how buyers can reach you, and what your support includes (for example, answ
 ## License
 
 All rights reserved. This repository is a portfolio project, published for viewing.
-To license the code for your own project, contact [your email].
+To license the code for your own project, contact: rustamtimalsina179@gmail.com.
