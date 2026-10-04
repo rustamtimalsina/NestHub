@@ -190,4 +190,5 @@ _Add how buyers can reach you, and what your support includes (for example, answ
 
 ## License
 
-See the `LICENSE` file. One license covers one end project.
+All rights reserved. This repository is a portfolio project, published for viewing.
+To license the code for your own project, contact [your email].
