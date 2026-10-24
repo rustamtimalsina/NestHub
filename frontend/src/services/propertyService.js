@@ -148,6 +148,11 @@ export const sendInquiry = async (propertyId, message) => {
   return response.data;
 };
 
+export const bookAppointment = async (propertyId, data) => {
+  const response = await api.post(`/properties/${propertyId}/appointment`, data);
+  return response.data;
+};
+
 export const getOwnerContact = async (propertyId) => {
   const response = await api.get(`/properties/${propertyId}/contact`);
   return response.data;

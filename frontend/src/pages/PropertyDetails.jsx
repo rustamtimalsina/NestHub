@@ -8,6 +8,7 @@ import {
   removeFavorite,
   checkFavorite,
   sendInquiry,
+  bookAppointment,
   getOwnerContact,
 } from "../services/propertyService";
 import {
@@ -75,8 +76,11 @@ function PropertyDetails() {
     d.setDate(d.getDate() + 1);
     return d.toISOString().split("T")[0];
   });
-  const [tourTimeSlot, setTourTimeSlot] = useState("11:00 AM - 12:00 PM");
+  const [tourTimeSlot, setTourTimeSlot] = useState("10:00 AM - 11:00 AM");
+  const [tourPhone, setTourPhone] = useState("");
+  const [tourNote, setTourNote] = useState("");
   const [tourBooked, setTourBooked] = useState(false);
+  const [bookingTour, setBookingTour] = useState(false);
 
   // Mortgage Calculator state
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
@@ -239,8 +243,24 @@ function PropertyDetails() {
       return;
     }
 
-    setTourBooked(true);
-    toast.success(`Visit booked for ${tourDate} (${tourTimeSlot})! Landlord notified.`);
+    setBookingTour(true);
+    try {
+      const res = await bookAppointment(property.id, {
+        tour_type: tourType,
+        date: tourDate,
+        time_slot: tourTimeSlot,
+        phone: tourPhone.trim() || undefined,
+        note: tourNote.trim() || undefined,
+      });
+      setTourBooked(true);
+      toast.success(res?.message || `Visit booked for ${tourDate}! Landlord notified by email.`);
+    } catch (err) {
+      console.error(err);
+      const detail = err.response?.data?.detail;
+      toast.error(detail || "Could not schedule appointment. Please try again.");
+    } finally {
+      setBookingTour(false);
+    }
   }
 
   async function handleRevealContact() {
@@ -627,11 +647,39 @@ function PropertyDetails() {
                     </div>
                   </div>
 
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        Contact Phone <span className="text-slate-400 font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="+977 9800000000"
+                        value={tourPhone}
+                        onChange={(e) => setTourPhone(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        Special Notes <span className="text-slate-400 font-normal">(Optional)</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. traveling from Pokhara"
+                        value={tourNote}
+                        onChange={(e) => setTourNote(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+
                   <button
                     type="submit"
-                    className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
+                    disabled={bookingTour}
+                    className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    Request Viewing Appointment
+                    {bookingTour ? "Sending Request..." : "Request Viewing Appointment"}
                   </button>
                 </form>
               )}

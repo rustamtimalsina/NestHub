@@ -20,7 +20,11 @@ from app.services.property_service import (
 from fastapi import Request
 from pydantic import BaseModel
 from app.limiter import limiter
-from app.email_utils import send_inquiry_email
+from app.email_utils import (
+    send_inquiry_email,
+    send_appointment_email,
+    send_appointment_confirmation_to_buyer,
+)
 from fastapi import UploadFile, File
 import uuid
 from app.database import BASE_DIR
@@ -441,6 +445,102 @@ async def send_inquiry(
         )
 
     return {"message": "Your message has been sent to the owner."}
+
+
+class AppointmentRequest(BaseModel):
+    tour_type: str = "in-person"
+    date: str
+    time_slot: str
+    phone: str | None = None
+    note: str | None = None
+
+
+@router.post("/{property_id}/appointment")
+@limiter.limit("10/hour")
+async def schedule_appointment(
+    request: Request,
+    property_id: int,
+    data: AppointmentRequest,
+    current_user: str = Depends(verify_token),
+):
+    cursor.execute(
+        "SELECT title, owner_email FROM properties WHERE id = ?",
+        (property_id,)
+    )
+    prop = cursor.fetchone()
+
+    if prop is None:
+        raise HTTPException(status_code=404, detail="Property not found")
+
+    cursor.execute(
+        "SELECT name, phone FROM users WHERE email = ?",
+        (current_user,)
+    )
+    buyer = cursor.fetchone()
+
+    if buyer is None:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    buyer_name = buyer["name"] if buyer else current_user
+    buyer_phone = data.phone or (buyer["phone"] if buyer else None)
+
+    import os
+    admin_fallback = os.getenv("BREVO_SENDER_EMAIL") or os.getenv("MAIL_USERNAME")
+    target_owner = prop["owner_email"] or admin_fallback
+
+    try:
+        # Send viewing request email to property owner / host
+        if target_owner:
+            await send_appointment_email(
+                to_email=target_owner,
+                property_title=prop["title"],
+                buyer_name=buyer_name,
+                buyer_email=current_user,
+                tour_type=data.tour_type,
+                date=data.date,
+                time_slot=data.time_slot,
+                phone=buyer_phone,
+                note=data.note,
+            )
+
+        # If platform admin is different from listing owner, send copy to admin
+        if admin_fallback and target_owner and admin_fallback.lower() != target_owner.lower():
+            try:
+                await send_appointment_email(
+                    to_email=admin_fallback,
+                    property_title=prop["title"],
+                    buyer_name=buyer_name,
+                    buyer_email=current_user,
+                    tour_type=data.tour_type,
+                    date=data.date,
+                    time_slot=data.time_slot,
+                    phone=buyer_phone,
+                    note=data.note,
+                )
+            except Exception as admin_err:
+                print(f"Admin copy email failed: {admin_err}")
+
+        # Send confirmation email to buyer
+        try:
+            await send_appointment_confirmation_to_buyer(
+                buyer_email=current_user,
+                buyer_name=buyer_name,
+                property_title=prop["title"],
+                tour_type=data.tour_type,
+                date=data.date,
+                time_slot=data.time_slot,
+            )
+        except Exception as buyer_err:
+            print(f"Buyer confirmation email notice failed: {buyer_err}")
+
+    except Exception as error:
+        print(f"Appointment email failed: {type(error).__name__} {error}")
+        raise HTTPException(
+            status_code=502,
+            detail="Unable to dispatch tour request email at this time. Please try again later."
+        )
+
+    return {"message": "Private tour request sent! You and the owner will receive confirmation emails."}
 @router.get("/{property_id}/contact")
 @limiter.limit("30/hour")
 def get_owner_contact(

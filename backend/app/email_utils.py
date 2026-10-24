@@ -96,3 +96,74 @@ NestHub Team
 """,
         reply_to=buyer_email,
     )
+
+
+async def send_appointment_email(
+    to_email: str,
+    property_title: str,
+    buyer_name: str,
+    buyer_email: str,
+    tour_type: str,
+    date: str,
+    time_slot: str,
+    phone: str | None = None,
+    note: str | None = None,
+):
+    tour_type_label = "In-Person Walkthrough" if tour_type == "in-person" else "Live Video Call"
+    phone_line = f"\nClient Phone: {phone}" if phone else ""
+    note_line = f"\nClient Note: {note}" if note else ""
+
+    text = f"""Hello,
+
+You have received a new private viewing request for "{property_title}" on NestHub!
+
+Appointment Details:
+- Tour Type: {tour_type_label}
+- Preferred Date: {date}
+- Preferred Time: {time_slot}
+
+Client Information:
+- Name: {buyer_name}
+- Email: {buyer_email}{phone_line}{note_line}
+
+You can reply directly to this email to coordinate the appointment with {buyer_name}.
+
+Regards,
+NestHub Team
+"""
+    await send_email(
+        to_email=to_email,
+        subject=f"Private Tour Request: {property_title} ({date} at {time_slot})",
+        text=text,
+        reply_to=buyer_email,
+    )
+
+
+async def send_appointment_confirmation_to_buyer(
+    buyer_email: str,
+    buyer_name: str,
+    property_title: str,
+    tour_type: str,
+    date: str,
+    time_slot: str,
+):
+    tour_type_label = "In-Person Walkthrough" if tour_type == "in-person" else "Live Video Call"
+    text = f"""Hello {buyer_name},
+
+Thank you for scheduling a visit with NestHub!
+
+Your tour request for "{property_title}" has been successfully delivered:
+- Tour Type: {tour_type_label}
+- Date: {date}
+- Time Slot: {time_slot}
+
+The host/agent will contact you directly to confirm the visit.
+
+Regards,
+NestHub Team
+"""
+    await send_email(
+        to_email=buyer_email,
+        subject=f"Viewing Requested: {property_title}",
+        text=text,
+    )

@@ -119,3 +119,35 @@ def test_inquiry_rules(client, sent_tokens, monkeypatch):
     visitor, visitor_headers = make_user(client, sent_tokens)
     assert client.post(url, json=message, headers=visitor_headers).status_code == 200
     assert len(sent) == 1
+
+
+def test_appointment_booking(client, sent_tokens, monkeypatch):
+    appointments_sent = []
+
+    async def fake_appointment(*args, **kwargs):
+        appointments_sent.append((args, kwargs))
+
+    monkeypatch.setattr(properties_module, 'send_appointment_email', fake_appointment)
+    monkeypatch.setattr(properties_module, 'send_appointment_confirmation_to_buyer', fake_appointment)
+
+    owner, owner_headers = make_user(client, sent_tokens)
+    listing_id = create_listing(client, owner_headers)
+
+    url = f'/properties/{listing_id}/appointment'
+    body = {
+        'tour_type': 'in-person',
+        'date': '2026-11-01',
+        'time_slot': '10:00 AM - 11:00 AM',
+        'phone': '+9779800000000',
+        'note': 'Looking forward to seeing the house',
+    }
+
+    # Unauthorized
+    assert client.post(url, json=body).status_code == 401
+
+    # Authorized visitor
+    visitor, visitor_headers = make_user(client, sent_tokens)
+    res = client.post(url, json=body, headers=visitor_headers)
+    assert res.status_code == 200
+    assert 'Private tour request sent' in res.json()['message']
+    assert len(appointments_sent) >= 1
