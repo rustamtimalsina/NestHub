@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.schemas import Property
+from pydantic import BaseModel, Field
 from app.security.admin import verify_admin
 from app.database import connection, cursor
 from app.services.property_service import (
@@ -7,6 +7,20 @@ from app.services.property_service import (
     admin_delete_property,
     admin_update_property
 )
+
+class AdminPropertyUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    city: str | None = None
+    price: int | None = None
+    bedrooms: int | None = None
+    bathrooms: int | None = None
+    area: int | None = None
+    property_type: str | None = None
+    status: str | None = None
+    image: str | None = None
+
+    model_config = {"extra": "ignore"}
 
 router = APIRouter(
     prefix="/admin",
@@ -199,7 +213,7 @@ def delete_admin_property(
 @router.put("/properties/{property_id}")
 def update_admin_property(
     property_id: int,
-    property: Property,
+    property: AdminPropertyUpdate,
     current_user: str = Depends(verify_admin)
 ):
     result = admin_update_property(

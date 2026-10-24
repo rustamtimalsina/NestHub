@@ -72,7 +72,7 @@ def get_property_by_id(property_id):
             users.name AS owner_name,
             users.phone AS owner_phone
         FROM properties
-        JOIN users
+        LEFT JOIN users
             ON properties.owner_email = users.email
         WHERE properties.id = ?
         """,
@@ -173,7 +173,7 @@ def delete_property(property_id, current_user):
 
     return "success"
 
-def get_all_properties(page, limit, sort, city, property_type):
+def get_all_properties(page, limit, sort, city, property_type, min_price=None, max_price=None):
 
     offset = (page - 1) * limit
 
@@ -196,13 +196,21 @@ def get_all_properties(page, limit, sort, city, property_type):
 
     params = []
 
-    if city:
-        query += " AND city = ?"
-        params.append(city)
+    if city and city.strip():
+        query += " AND LOWER(city) = LOWER(?)"
+        params.append(city.strip())
 
-    if property_type:
+    if property_type and property_type.strip():
         query += " AND property_type = ?"
-        params.append(property_type)
+        params.append(property_type.strip())
+
+    if min_price is not None and int(min_price) > 0:
+        query += " AND price >= ?"
+        params.append(int(min_price))
+
+    if max_price is not None and int(max_price) > 0:
+        query += " AND price <= ?"
+        params.append(int(max_price))
 
     # Count filtered properties
     count_query = query.replace("SELECT *", "SELECT COUNT(*)")
@@ -225,7 +233,8 @@ def get_all_properties(page, limit, sort, city, property_type):
         "properties": [dict(property) for property in properties],
         "total": total,
         "page": page,
-        "total_pages": (total + limit - 1) // limit
+        "limit": limit,
+        "total_pages": max(1, (total + limit - 1) // limit)
     }
 def search_properties(keyword):
 
@@ -484,20 +493,40 @@ def admin_delete_property(property_id):
     connection.commit()
 
     return "success"
-def admin_update_property(property_id, property):
+def admin_update_property(property_id, property_data):
     cursor.execute(
         """
-        SELECT id
+        SELECT *
         FROM properties
         WHERE id = ?
         """,
         (property_id,)
     )
 
-    existing_property = cursor.fetchone()
+    existing = cursor.fetchone()
 
-    if existing_property is None:
+    if existing is None:
         return "not_found"
+
+    if hasattr(property_data, "model_dump"):
+        data = property_data.model_dump(exclude_unset=True)
+    elif hasattr(property_data, "dict"):
+        data = property_data.dict(exclude_unset=True)
+    elif isinstance(property_data, dict):
+        data = property_data
+    else:
+        data = {}
+
+    title = data.get("title") if data.get("title") is not None else existing["title"]
+    description = data.get("description") if data.get("description") is not None else existing["description"]
+    city = data.get("city") if data.get("city") is not None else existing["city"]
+    price = data.get("price") if data.get("price") is not None else existing["price"]
+    bedrooms = data.get("bedrooms") if data.get("bedrooms") is not None else existing["bedrooms"]
+    bathrooms = data.get("bathrooms") if data.get("bathrooms") is not None else existing["bathrooms"]
+    area = data.get("area") if data.get("area") is not None else existing["area"]
+    property_type = data.get("property_type") if data.get("property_type") is not None else existing["property_type"]
+    status = data.get("status") if data.get("status") is not None else existing["status"]
+    image = data.get("image") if data.get("image") is not None else existing["image"]
 
     cursor.execute(
         """
@@ -516,16 +545,16 @@ def admin_update_property(property_id, property):
         WHERE id = ?
         """,
         (
-            property.title,
-            property.description,
-            property.city,
-            property.price,
-            property.bedrooms,
-            property.bathrooms,
-            property.area,
-            property.property_type,
-            property.status,
-            property.image,
+            title,
+            description,
+            city,
+            price,
+            bedrooms,
+            bathrooms,
+            area,
+            property_type,
+            status,
+            image,
             property_id
         )
     )

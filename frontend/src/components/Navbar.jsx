@@ -1,325 +1,257 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
-import api from "../services/api";
+import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import {
   House,
   Building2,
   Heart,
-  PlusSquare,
+  PlusCircle,
   CircleUserRound,
   LogOut,
+  Menu,
+  X,
+  ShieldCheck,
+  Compass,
 } from "lucide-react";
 
 function Navbar() {
   const navigate = useNavigate();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-const [user, setUser] = useState(null);
-
-const token = localStorage.getItem("token");
-useEffect(() => {
-  async function loadUser() {
-    if (!token) {
-      setUser(null);
-      return;
-    }
-
-    try {
-  const response = await api.get("/users/me");
-  setUser(response.data);
-} catch (error) {
-  console.error("Failed to load user:", error);
-  setUser(null);
-}
-  }
-
-  loadUser();
-}, [token]);
 
   function handleLogout() {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login");
   }
 
+  const navLinkClasses = ({ isActive }) =>
+    `flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+      isActive
+        ? "bg-blue-50 text-blue-600 shadow-xs"
+        : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+    }`;
+
   return (
-    <nav className="relative sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200 shadow-sm">
-     <div className="max-w-7xl mx-auto flex justify-between items-center px-8 py-4">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-xs transition-all">
+      <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-8 h-20">
+        {/* Brand Logo */}
+        <Link
+          to="/"
+          className="flex items-center gap-2.5 text-2xl font-black text-slate-900 tracking-tight group"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+            <House size={22} />
+          </div>
+          <span className="font-extrabold tracking-tight">
+            Nest<span className="text-blue-600">Hub</span>
+          </span>
+        </Link>
 
-      <Link
-  to="/"
-  className="flex items-center gap-2 text-3xl font-extrabold text-blue-600 tracking-tight hover:scale-105 transition"
->
-   <House size={32} />
-  <span>NestHub</span>
-</Link>
+        {/* Desktop Navigation */}
+        <nav className="hidden lg:flex items-center gap-1.5">
+          <NavLink to="/" className={navLinkClasses}>
+            Home
+          </NavLink>
 
-           <>
-  {/* Desktop Menu */}
-  <div className="hidden xl:flex items-center gap-3 text-gray-700 font-medium">
-          <Link
-  to="/"
-  className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
->
-  Home
-</Link>
+          <NavLink to="/properties" className={navLinkClasses}>
+            <Compass size={17} />
+            Explore
+          </NavLink>
 
-          <Link
-  to="/properties"
-  className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
->
-  Properties
-</Link>
-
-          {token && (
+          {isAuthenticated && (
             <>
+              <NavLink to="/favorites" className={navLinkClasses}>
+                <Heart size={17} />
+                Favorites
+              </NavLink>
+
+              <NavLink to="/my-properties" className={navLinkClasses}>
+                <Building2 size={17} />
+                My Listings
+              </NavLink>
+
+              <NavLink
+                to="/add-property"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+              >
+                <PlusCircle size={17} />
+                List Property
+              </NavLink>
+
+              {isAdmin && (
+                <NavLink
+                  to="/admin/dashboard"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-purple-50 text-purple-700 hover:bg-purple-100 transition"
+                >
+                  <ShieldCheck size={17} />
+                  Admin
+                </NavLink>
+              )}
+            </>
+          )}
+        </nav>
+
+        {/* Desktop User Section */}
+        <div className="hidden lg:flex items-center gap-3">
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3">
               <Link
-  to="/favorites"
-  className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
->
-   <div className="flex items-center gap-2">
-    <Heart size={18} />
-    Favorites
-</div>
-</Link>
-
-              <Link
-  to="/my-properties"
-  className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
->
-  <div className="flex items-center gap-2">
-    <Building2 size={18} />
-    My Properties
-</div>
-</Link>
-
-              <Link
-  to="/add-property"
-  className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
->
-  <div className="flex items-center gap-2">
-    <PlusSquare size={18} />
-    Add Property
-</div>
-</Link>
-{user?.role === "admin" && (
-  <>
-    <Link
-      to="/admin/dashboard"
-      className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
-    >
-      Admin Dashboard
-    </Link>
-
-    <Link
-      to="/admin/users"
-      className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
-    >
-      User Management
-    </Link>
-
-    <Link
-      to="/admin/properties"
-      className="px-4 py-2 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition"
-    >
-      Property Management
-    </Link>
-  </>
-)}
-<Link
-  to="/profile"
-  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition hover:opacity-80 ${
-    user?.role === "admin" ? "bg-purple-100" : "bg-blue-50"
-  }`}
->
-  <CircleUserRound
-    size={22}
-    className={user?.role === "admin" ? "text-purple-600" : "text-blue-600"}
-  />
-
-  <span>{user?.role === "admin" ? "Admin" : "User"}</span>
-</Link>
+                to="/profile"
+                className="flex items-center gap-2.5 py-1.5 px-3 rounded-full bg-slate-50 hover:bg-slate-100 border border-slate-200/60 transition group"
+              >
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs">
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "U"}
+                </div>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-slate-800 leading-tight">
+                    {user?.name?.split(" ")[0] || "User"}
+                  </p>
+                  <span className="text-[10px] font-semibold text-slate-400 capitalize">
+                    {user?.role || "Member"}
+                  </span>
+                </div>
+              </Link>
 
               <button
                 onClick={handleLogout}
-               className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-xl transition"
+                className="p-2.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition"
+                title="Log Out"
               >
-               <div className="flex items-center gap-2">
-    <LogOut size={18} />
-    Logout
-</div>
+                <LogOut size={18} />
               </button>
-            </>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                to="/login"
+                className="px-5 py-2.5 text-sm font-semibold text-slate-700 hover:text-blue-600 transition"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="px-5 py-2.5 text-sm font-semibold rounded-2xl bg-slate-900 text-white hover:bg-blue-600 shadow-md shadow-slate-900/10 hover:shadow-lg transition-all"
+              >
+                Get Started
+              </Link>
+            </div>
           )}
+        </div>
 
+        {/* Mobile Menu Button */}
+        <button
+          className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Toggle Menu"
+        >
+          {menuOpen ? <X size={26} /> : <Menu size={26} />}
+        </button>
+      </div>
 
-          {!token && (
+      {/* Mobile Drawer */}
+      {menuOpen && (
+        <div className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-100 px-6 py-6 shadow-xl space-y-3">
+          <Link
+            to="/"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+          >
+            <House size={20} />
+            Home
+          </Link>
+
+          <Link
+            to="/properties"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+          >
+            <Compass size={20} />
+            Explore Properties
+          </Link>
+
+          {isAuthenticated ? (
             <>
               <Link
-  to="/login"
-  className="px-4 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-600 transition"
->
-  Login
-</Link>
+                to="/favorites"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+              >
+                <Heart size={20} />
+                Favorites
+              </Link>
 
-            <Link
-  to="/register"
-  className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl transition"
->
-  Register
-</Link>
+              <Link
+                to="/my-properties"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+              >
+                <Building2 size={20} />
+                My Listings
+              </Link>
+
+              <Link
+                to="/add-property"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-blue-600 font-semibold bg-blue-50 transition"
+              >
+                <PlusCircle size={20} />
+                List a Property
+              </Link>
+
+              {isAdmin && (
+                <Link
+                  to="/admin/dashboard"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-2xl text-purple-700 font-semibold bg-purple-50 transition"
+                >
+                  <ShieldCheck size={20} />
+                  Admin Dashboard
+                </Link>
+              )}
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <Link
+                  to="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2.5 text-slate-700 font-semibold"
+                >
+                  <CircleUserRound size={22} className="text-blue-600" />
+                  <span>{user?.name || "My Profile"}</span>
+                </Link>
+
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMenuOpen(false);
+                  }}
+                  className="flex items-center gap-1 text-sm font-semibold text-rose-600 px-3 py-1.5 rounded-xl hover:bg-rose-50"
+                >
+                  <LogOut size={16} />
+                  Logout
+                </button>
+              </div>
             </>
+          ) : (
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="text-center py-3 rounded-2xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                className="text-center py-3 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+              >
+                Register
+              </Link>
+            </div>
           )}
-
         </div>
-    {/* Mobile Menu Button */}
-<button
-  className="xl:hidden text-gray-700"
-  onClick={() => setMenuOpen(!menuOpen)}
->
-  {menuOpen ? <X size={30} /> : <Menu size={30} />}
-</button>
-{menuOpen && (
-  <div className="absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg xl:hidden">
-
-    <div className="flex flex-col p-4 space-y-2">
-      {token && (
-        <Link
-          to="/profile"
-          onClick={() => setMenuOpen(false)}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg ${
-            user?.role === "admin" ? "bg-purple-100" : "bg-blue-50"
-          }`}
-        >
-          <CircleUserRound
-            size={24}
-            className={user?.role === "admin" ? "text-purple-600" : "text-blue-600"}
-          />
-
-          <div className="min-w-0">
-            <p className="font-semibold leading-tight truncate">
-              {user?.name || "User"}
-            </p>
-            <p className="text-xs text-gray-500">
-              {user?.role === "admin" ? "Admin" : "User"} · View profile
-            </p>
-          </div>
-        </Link>
       )}
-
-      <Link
-  to="/"
-  onClick={() => setMenuOpen(false)}
-  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
->
-  <House size={18} />
-  Home
-</Link>
-
-    <Link
-  to="/properties"
-  onClick={() => setMenuOpen(false)}
-  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
->
-  <Building2 size={18} />
-  Properties
-</Link>
-
-      {token ? (
-        <>
-         <Link
-  to="/favorites"
-  onClick={() => setMenuOpen(false)}
-  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
->
-  <Heart size={18} />
-  Favorites
-</Link>
-
-          <Link
-  to="/my-properties"
-  onClick={() => setMenuOpen(false)}
-  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
->
-  <Building2 size={18} />
-  My Properties
-</Link>
-
-         <Link
-  to="/add-property"
-  onClick={() => setMenuOpen(false)}
-  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
->
-  <PlusSquare size={18} />
-  Add Property
-</Link>
-{user?.role === "admin" && (
-  <>
-    <Link
-      to="/admin/dashboard"
-      onClick={() => setMenuOpen(false)}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
-    >
-      Admin Dashboard
-    </Link>
-
-        <Link
-      to="/admin/users"
-      onClick={() => setMenuOpen(false)}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
-    >
-      User Management
-    </Link>
-
-    <Link
-      to="/admin/properties"
-      onClick={() => setMenuOpen(false)}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-50"
-    >
-      Property Management
-    </Link>
-  </>
-)}
-
-        <button
-  onClick={() => {
-    handleLogout();
-    setMenuOpen(false);
-  }}
-  className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white rounded-lg py-3 transition"
->
-  <LogOut size={18} />
-  Logout
-</button>
-        </>
-      ) : (
-        <>
-          <Link
-            to="/login"
-            onClick={() => setMenuOpen(false)}
-            className="px-4 py-3 rounded-lg hover:bg-blue-50"
-          >
-            Login
-          </Link>
-
-          <Link
-            to="/register"
-            onClick={() => setMenuOpen(false)}
-            className="bg-blue-600 text-white text-center rounded-lg py-3"
-          >
-            Register
-          </Link>
-        </>
-      )}
-
-    </div>
-
-  </div>
-)}
-
-</>
-
-</div>
-</nav>
+    </header>
   );
 }
 

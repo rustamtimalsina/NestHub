@@ -1,7 +1,10 @@
 import axios from "axios";
 
+const rawUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const baseURL = rawUrl.replace(/\/+$/, "");
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL,
 });
 
 api.interceptors.request.use((config) => {
@@ -25,9 +28,9 @@ api.interceptors.response.use(
     const isLogin = url.includes("/users/login");
 
     if (status === 401 && hadToken && !isLogin) {
-      // The saved login expired: clear it and ask the user to log in again
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      // Notify auth context via storage event or dispatch custom event
+      window.dispatchEvent(new Event("auth-logout"));
     }
 
     return Promise.reject(error);

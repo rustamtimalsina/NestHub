@@ -60,10 +60,12 @@ def add_property(property: Property, current_user: str = Depends(verify_token)):
 @router.get("/")
 def get_properties(
     page: int = 1,
-    limit: int = 5,
+    limit: int = 9,
     sort: str = "newest",
     city: str = "",
-    property_type: str = ""
+    property_type: str = "",
+    min_price: int | None = None,
+    max_price: int | None = None,
 ):
 
     if page < 1:
@@ -71,7 +73,7 @@ def get_properties(
     if not 1 <= limit <= 100:
         raise HTTPException(status_code=422, detail="limit must be between 1 and 100")
 
-    result = get_all_properties(page, limit, sort, city, property_type)
+    result = get_all_properties(page, limit, sort, city, property_type, min_price, max_price)
 
     for item in result["properties"]:
           item.pop("owner_email", None)
@@ -131,7 +133,7 @@ def get_public_property(property_id: int):
             users.name AS owner_name,
             users.phone AS owner_phone
         FROM properties
-        JOIN users
+        LEFT JOIN users
             ON properties.owner_email = users.email
         WHERE properties.id = ?
         """,
@@ -450,7 +452,7 @@ def get_owner_contact(
         """
         SELECT users.name AS owner_name, users.phone AS owner_phone
         FROM properties
-        JOIN users ON properties.owner_email = users.email
+        LEFT JOIN users ON properties.owner_email = users.email
         WHERE properties.id = ?
         """,
         (property_id,)

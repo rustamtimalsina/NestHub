@@ -2,7 +2,7 @@ import os
 import re
 import secrets
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
@@ -85,7 +85,7 @@ async def create_user(request: Request, user: User):
 
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-    expiry = datetime.utcnow() + timedelta(hours=24)
+    expiry = datetime.now(timezone.utc) + timedelta(hours=24)
 
     try:
         cursor.execute(
@@ -145,7 +145,12 @@ def verify_email(token: str):
     if user is None or user["verify_expiry"] is None:
         return RedirectResponse(f"{frontend_url}/login?verified=invalid")
 
-    if datetime.utcnow() > datetime.fromisoformat(user["verify_expiry"]):
+    expiry_dt = datetime.fromisoformat(user["verify_expiry"])
+    now_dt = datetime.now(timezone.utc)
+    if expiry_dt.tzinfo is None:
+        now_dt = now_dt.replace(tzinfo=None)
+
+    if now_dt > expiry_dt:
         return RedirectResponse(f"{frontend_url}/login?verified=expired")
 
     cursor.execute(
@@ -177,7 +182,7 @@ async def resend_verification(request: Request, email: str):
 
     token = secrets.token_urlsafe(32)
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
-    expiry = datetime.utcnow() + timedelta(hours=24)
+    expiry = datetime.now(timezone.utc) + timedelta(hours=24)
 
     cursor.execute(
         "UPDATE users SET verify_token = ?, verify_expiry = ? WHERE id = ?",
@@ -264,7 +269,7 @@ async def forgot_password(request: Request, email: str):
     token = secrets.token_urlsafe(32)
 
     # Token expires in 30 minutes
-    expiry = datetime.utcnow() + timedelta(minutes=30)
+    expiry = datetime.now(timezone.utc) + timedelta(minutes=30)
 
     token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
 
@@ -318,8 +323,11 @@ def reset_password(data: ResetPasswordRequest):
         )
 
     expiry = datetime.fromisoformat(user["token_expiry"])
+    now_dt = datetime.now(timezone.utc)
+    if expiry.tzinfo is None:
+        now_dt = now_dt.replace(tzinfo=None)
 
-    if datetime.utcnow() > expiry:
+    if now_dt > expiry:
         raise HTTPException(
             status_code=400,
             detail="Reset token has expired."

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
   getPropertyById,
   getPropertyImages,
@@ -14,534 +14,632 @@ import {
   MapPin,
   BedDouble,
   Bath,
-  Ruler,
+  Maximize2,
   Home,
   User,
   Phone,
   Heart,
-  FileText,
+  Share2,
+  Send,
+  Calculator,
+  MessageCircle,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 import { getImageUrl } from "../utils/imageUrl";
+import { useAuth } from "../context/AuthContext";
+import { PropertyDetailsSkeleton } from "../components/Skeleton";
+import PropertyCard from "../components/PropertyCard";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 function PropertyDetails() {
   const { id } = useParams();
+  const { isAuthenticated } = useAuth();
 
   const [property, setProperty] = useState(null);
- const [isFavorite, setIsFavorite] = useState(false);
-const [showContact, setShowContact] = useState(false);
-const [similarProperties, setSimilarProperties] = useState([]);
-const [images, setImages] = useState([]);
-const [selectedImage, setSelectedImage] = useState("");
-const [inquiryText, setInquiryText] = useState("");
-const [sendingInquiry, setSendingInquiry] = useState(false);
-const [ownerPhone, setOwnerPhone] = useState("");
-useEffect(() => {
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favLoading, setFavLoading] = useState(false);
+
+  const [images, setImages] = useState([]);
+  const [selectedImage, setSelectedImage] = useState("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const [similarProperties, setSimilarProperties] = useState([]);
+
+  // Inquiry form
+  const [inquiryText, setInquiryText] = useState("");
+  const [sendingInquiry, setSendingInquiry] = useState(false);
+  const [ownerContact, setOwnerContact] = useState(null);
+  const [contactLoading, setContactLoading] = useState(false);
+
+  // Mortgage Calculator state
+  const [downPaymentPercent, setDownPaymentPercent] = useState(20);
+  const [loanTenureYears, setLoanTenureYears] = useState(20);
+  const [interestRate, setInterestRate] = useState(10.5);
+
+  useEffect(() => {
     let active = true;
 
-    async function loadProperty() {
+    async function loadPropertyData() {
       try {
+        setLoading(true);
+        setNotFound(false);
+
         const data = await getPropertyById(id);
         if (!active) return;
         setProperty(data);
-       const propertyImages = await getPropertyImages(id);
+        setSelectedImage(data.image);
 
-if (active) {
- const filteredImages = propertyImages.filter(
-  (img) => img.image !== data.image
-);
-
-setImages(filteredImages);
-
-setSelectedImage(data.image); 
-  }  const similar = await getSimilarProperties(id);
-if (active) {
-  setSimilarProperties(similar);
-}
-
+        // Fetch gallery images
         try {
-          const favorite = await checkFavorite(id);
-          if (active) setIsFavorite(favorite);
+          const gallery = await getPropertyImages(id);
+          if (active) {
+            setImages(gallery || []);
+          }
         } catch {
-          // Guests are allowed to view the property without favorite status.
+          // Non-critical if gallery fails
         }
-      } catch (error) {
-        console.error(error);
+
+        // Fetch similar properties
+        try {
+          const similar = await getSimilarProperties(id);
+          if (active) setSimilarProperties(similar || []);
+        } catch {
+          // Non-critical
+        }
+
+        // Check favorite if user is authenticated
+        if (isAuthenticated) {
+          try {
+            const fav = await checkFavorite(id);
+            if (active) setIsFavorite(fav);
+          } catch {
+            // guest view
+          }
+        }
+      } catch (err) {
+        console.error(err);
+        if (active) setNotFound(true);
+      } finally {
+        if (active) setLoading(false);
       }
     }
 
-    loadProperty();
+    loadPropertyData();
     return () => {
       active = false;
     };
-  }, [id]);
-async function handleFavorite() {
-  try {
-    if (isFavorite) {
-      const data = await removeFavorite(property.id);
+  }, [id, isAuthenticated]);
 
-      alert(data.message);
+  const allGalleryImages = useMemo(() => {
+    if (!property) return [];
+    const list = [];
+    if (property.image) {
+      list.push(property.image);
+    }
+    images.forEach((img) => {
+      if (img.image && !list.includes(img.image)) {
+        list.push(img.image);
+      }
+    });
+    return list;
+  }, [property, images]);
 
-      setIsFavorite(false);
+  // Mortgage calculation (EMI)
+  const mortgageCalculation = useMemo(() => {
+    if (!property?.price) return { emi: 0, loanAmount: 0, downPayment: 0 };
+    const price = Number(property.price);
+    const downPayment = (price * downPaymentPercent) / 100;
+    const loanAmount = price - downPayment;
 
-    } else {
+    const monthlyInterestRate = interestRate / 12 / 100;
+    const numberOfMonths = loanTenureYears * 12;
 
-      const data = await addFavorite(property.id);
-
-      alert(data.message);
-
-      setIsFavorite(true);
+    if (monthlyInterestRate === 0) {
+      return {
+        emi: Math.round(loanAmount / numberOfMonths),
+        loanAmount,
+        downPayment,
+      };
     }
 
-  } catch (error) {
+    const emi =
+      (loanAmount *
+        monthlyInterestRate *
+        Math.pow(1 + monthlyInterestRate, numberOfMonths)) /
+      (Math.pow(1 + monthlyInterestRate, numberOfMonths) - 1);
 
-    console.error(error);
+    return {
+      emi: Math.round(emi),
+      loanAmount: Math.round(loanAmount),
+      downPayment: Math.round(downPayment),
+    };
+  }, [property, downPaymentPercent, loanTenureYears, interestRate]);
 
-    alert("Please login first.");
-
-  }
-}
-async function handleSendInquiry() {
-  if (inquiryText.trim().length < 10) {
-    alert("Please write at least 10 characters.");
-    return;
-  }
-
-  setSendingInquiry(true);
-
-  try {
-    const data = await sendInquiry(property.id, inquiryText.trim());
-    alert(data.message);
-    setInquiryText("");
-    setShowContact(false);
-  } catch (error) {
-    if (error.response?.status === 401) {
-      alert("Please login first.");
-    } else if (error.response?.status === 429) {
-      alert("Too many messages. Please try again later.");
-    } else {
-      alert(error.response?.data?.detail || "Could not send your message.");
+  async function handleToggleFavorite() {
+    if (!isAuthenticated) {
+      toast.info("Please login first to save this property.");
+      return;
     }
-  } finally {
-    setSendingInquiry(false);
+
+    setFavLoading(true);
+    try {
+      if (isFavorite) {
+        await removeFavorite(property.id);
+        setIsFavorite(false);
+        toast.info("Removed from favorites");
+      } else {
+        await addFavorite(property.id);
+        setIsFavorite(true);
+        toast.success("Added to favorites ❤️");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Could not update favorite status");
+    } finally {
+      setFavLoading(false);
+    }
   }
-}
-async function openContact() {
-  setShowContact(true);
 
-  // Only logged-in users can see the owner's phone number
-  if (!localStorage.getItem("token")) return;
+  async function handleSendInquiry(e) {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      toast.info("Please log in to send an inquiry to the owner.");
+      return;
+    }
 
-  try {
-    const data = await getOwnerContact(property.id);
-    setOwnerPhone(data.owner_phone || "");
-  } catch (error) {
-    console.error(error);
+    if (inquiryText.trim().length < 10) {
+      toast.error("Message must be at least 10 characters.");
+      return;
+    }
+
+    setSendingInquiry(true);
+    try {
+      const data = await sendInquiry(property.id, inquiryText.trim());
+      toast.success(data.message || "Inquiry sent successfully!");
+      setInquiryText("");
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      toast.error(detail || "Could not send inquiry. Please try again.");
+    } finally {
+      setSendingInquiry(false);
+    }
   }
-}
 
-  if (!property) {
+  async function handleRevealContact() {
+    if (!isAuthenticated) {
+      toast.info("Please login to view verified owner contact numbers.");
+      return;
+    }
+
+    setContactLoading(true);
+    try {
+      const data = await getOwnerContact(property.id);
+      setOwnerContact(data);
+      toast.success("Owner contact details retrieved!");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Could not load owner contact.");
+    } finally {
+      setContactLoading(false);
+    }
+  }
+
+  function handleShare() {
+    if (navigator.share) {
+      navigator.share({
+        title: property.title,
+        text: `Check out this property in ${property.city} on NestHub:`,
+        url: window.location.href,
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Listing link copied to clipboard!");
+    }
+  }
+
+  if (loading) {
+    return <PropertyDetailsSkeleton />;
+  }
+
+  if (notFound || !property) {
     return (
-      <h1 className="text-center text-2xl mt-20">
-        Loading...
-      </h1>
+      <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-6">
+        <h2 className="text-3xl font-black text-slate-800">Property Not Found</h2>
+        <p className="text-slate-500 mt-2 max-w-md">
+          This listing may have been unlisted, sold, or the link is invalid.
+        </p>
+        <Link
+          to="/properties"
+          className="mt-6 px-6 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+        >
+          Browse Other Properties
+        </Link>
+      </div>
     );
   }
 
-return (
-  <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 py-12">
-  <div className="max-w-6xl mx-auto px-6">
+  const whatsappMessage = encodeURIComponent(
+    `Hello! I am interested in your listing "${property.title}" in ${property.city} on NestHub: ${window.location.href}`
+  );
 
-    <div className="bg-white rounded-[32px] shadow-2xl overflow-hidden border border-gray-100">
-
-      <img
-              src={
-  selectedImage
-    ? getImageUrl(API_URL, selectedImage)
-    : property.image
-    ? getImageUrl(API_URL, property.image)
-    : "https://placehold.co/1200x600?text=No+Image"
-}
-        alt={property.title}
-        className="w-full h-[520px] object-cover transition duration-700 hover:scale-105"
-      />
-     {(property.image || images.length > 0) && (
-  <div className="flex gap-3 overflow-x-auto p-4 bg-gray-50">
-
-    {/* Cover Image */}
-    {property.image && (
-      <img
-        src={getImageUrl(API_URL, property.image)}
-        alt="Cover"
-        onClick={() => setSelectedImage(property.image)}
-        className={`w-28 h-20 rounded-lg object-cover cursor-pointer border-4 transition ${
-          selectedImage === property.image
-            ? "border-blue-600"
-            : "border-transparent hover:border-blue-300"
-        }`}
-      />
-    )}
-
-    {/* Gallery Images */}
-    {images.map((image) => (
-      <img
-        key={image.id}
-        src={getImageUrl(API_URL, image.image)}
-        alt="Property"
-        onClick={() => setSelectedImage(image.image)}
-        className={`w-28 h-20 rounded-lg object-cover cursor-pointer border-4 transition ${
-          selectedImage === image.image
-            ? "border-blue-600"
-            : "border-transparent hover:border-blue-300"
-        }`}
-      />
-    ))}
-
-  </div>
-)}
-
-      <div className="p-8">
-
-       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
-
-  <div>
-
-    <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-semibold mb-3">
-      {property.property_type}
-    </span>
-
-   <h1 className="text-5xl font-black text-slate-800">
-      {property.title}
-    </h1>
-
-   <p className="text-gray-500 text-lg mt-2 flex items-center gap-2">
-  <MapPin size={20} className="text-blue-600" />
-  {property.city}
-</p>
-
-  </div>
-
-  <div className="text-left md:text-right">
-
-    <p className="text-gray-500">
-      Price
-    </p>
-
-    <h2 className="text-6xl font-black text-blue-600 tracking-tight">
-      Rs. {Number(property.price).toLocaleString()}
-    </h2>
-
-  </div>
-
-</div>
-
-        <hr className="my-8" />
-
-<div className="mb-8">
-<h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-  <FileText className="text-blue-600" />
-  Description
-</h2>
-  <p className="text-gray-700 leading-8 bg-gradient-to-br from-white to-slate-50 border border-gray-100 p-8 rounded-3xl shadow-lg">
-  {property.description || "No description available."}
-</p>
-
-</div>
- <hr className="my-8" />
-<h2 className="text-2xl font-semibold mb-6">
-  Property Details
-</h2>
-
-<div className="grid grid-cols-2 md:grid-cols-3 gap-5">
-
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-   <p className="flex items-center gap-2 text-gray-700 font-medium">
-  <BedDouble size={18} className="text-blue-600" />
-  Bedrooms
-</p>
-    <p className="text-2xl font-bold mt-2">
-      {property.bedrooms}
-    </p>
-  </div>
-
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="flex items-center gap-2 text-gray-700 font-medium">
-  <Bath size={18} className="text-blue-600" />
-  Bathrooms
-</p>
-    <p className="text-2xl font-bold mt-2">
-      {property.bathrooms}
-    </p>
-  </div>
-
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="flex items-center gap-2 text-gray-700 font-medium">
-  <Ruler size={18} className="text-blue-600" />
-  Area
-</p>
-    <p className="text-2xl font-bold mt-2">
-      {property.area} sq.ft
-    </p>
-  </div>
-
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-   <p className="flex items-center gap-2 text-gray-700 font-medium">
-  <Home size={18} className="text-blue-600" />
-  Property Type
-</p>
-    <p className="text-xl font-semibold mt-2">
-      {property.property_type}
-    </p>
-  </div>
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-  <p className="flex items-center gap-2 text-gray-700 font-medium">
-    📌 Status
-  </p>
-
-  <p
-    className={`text-xl font-semibold mt-2 ${
-      property.status === "Available"
-        ? "text-green-600"
-        : property.status === "Sold"
-        ? "text-red-600"
-        : property.status === "Rented"
-        ? "text-blue-600"
-        : "text-yellow-600"
-    }`}
-  >
-    {property.status}
-  </p>
-</div>
-
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-   <p className="flex items-center gap-2 text-gray-700 font-medium">
-  <MapPin size={18} className="text-blue-600" />
-  City
-</p>
-    <p className="text-xl font-semibold mt-2">
-      {property.city}
-    </p>
-  </div>
-
-  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-    <p className="flex items-center gap-2 text-gray-700 font-medium">
-  <User size={18} className="text-blue-600" />
-  Owner
-</p>
-    <p className="text-lg font-semibold mt-2 break-all">
-      {property.owner_name}
-    </p>
-  </div>
-
-</div>
-       <div className="mt-10 flex flex-col md:flex-row gap-4">
-
-  <button
-  onClick={handleFavorite}
-  disabled={property.status !== "Available"}
-  className={`flex-1 px-8 py-3 rounded-lg font-semibold text-white transition ${
-    property.status !== "Available"
-      ? "bg-gray-400 cursor-not-allowed"
-      : isFavorite
-      ? "bg-red-600 hover:bg-red-700"
-      : "bg-blue-600 hover:bg-blue-700"
-  }`}
->
-  <span className="flex items-center justify-center gap-2">
-    <Heart size={20} fill={isFavorite ? "white" : "none"} />
-
-    {property.status !== "Available"
-      ? "Not Available"
-      : isFavorite
-      ? "Remove from Favorites"
-      : "Add to Favorites"}
-  </span>
-</button>
-         <button
-   onClick={() => {
-    if (property.status === "Available") {
-      openContact();
-    }
-  }}
-  disabled={property.status !== "Available"}
-  className={`flex-1 py-3 rounded-lg font-semibold transition text-white ${
-    property.status === "Available"
-      ? "bg-green-600 hover:bg-green-700"
-      : "bg-gray-400 cursor-not-allowed"
-  }`}
->
-  <span className="flex items-center justify-center gap-2">
-    <Phone size={20} />
-
-    {property.status === "Available"
-      ? "Contact Owner"
-      : property.status === "Sold"
-      ? "Property Sold"
-      : property.status === "Rented"
-      ? "Property Rented"
-      : "Property Pending"}
-  </span>
-</button>
-
-        </div>
-
-      </div>
-
-          {showContact && (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-
-        <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-
-          <h2 className="text-3xl font-bold mb-6 text-center">
-            ✉️ Contact Owner
-          </h2>
-
-          <div className="mb-6">
-            <p className="text-gray-500 text-sm">Property</p>
-            <p className="font-semibold text-lg">{property.title}</p>
-
-            <p className="text-gray-500 text-sm mt-3">Owner</p>
-            <p className="font-semibold">{property.owner_name}</p>
-          </div>
-
-          {localStorage.getItem("token") ? (
-            <>
-              {ownerPhone && (
-                <div className="mb-6">
-                  <p className="text-gray-500 text-sm">Phone</p>
-                  <p className="font-semibold mb-3">{ownerPhone}</p>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => window.open(`tel:${ownerPhone}`)}
-                      className="bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold transition"
-                    >
-                      📞 Call
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        window.open(`https://wa.me/977${ownerPhone}`, "_blank")
-                      }
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-semibold transition"
-                    >
-                      💬 WhatsApp
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <p className="text-gray-500 text-sm mb-2">
-                Send a message to the owner
-              </p>
-
-              <textarea
-                rows="4"
-                maxLength={1000}
-                placeholder="Hello, I'm interested in this property..."
-                className="w-full border border-gray-300 rounded-lg p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                value={inquiryText}
-                onChange={(e) => setInquiryText(e.target.value)}
-              />
-
-              <button
-                onClick={handleSendInquiry}
-                disabled={sendingInquiry}
-                className={`w-full mt-3 py-3 rounded-xl font-semibold text-white transition ${
-                  sendingInquiry
-                    ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }`}
-              >
-                {sendingInquiry ? "Sending..." : "Send Message"}
-              </button>
-            </>
-          ) : (
-            <div className="text-center bg-gray-50 border border-gray-200 rounded-xl p-6">
-              <p className="text-gray-600 mb-4">
-                Log in to see the owner's phone number and send a message.
-              </p>
-
-              <Link
-                to="/login"
-                className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition"
-              >
-                Login
-              </Link>
-            </div>
-          )}
-
+  return (
+    <div className="min-h-screen bg-slate-50/50 pb-24">
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
           <button
-            onClick={() => setShowContact(false)}
-            className="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 py-3 rounded-xl font-semibold transition"
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-6 right-6 p-3 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition"
           >
-            Close
+            <X size={24} />
           </button>
 
+          <button
+            onClick={() =>
+              setLightboxIndex(
+                (prev) => (prev - 1 + allGalleryImages.length) % allGalleryImages.length
+              )
+            }
+            className="absolute left-6 p-3 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition"
+          >
+            <ChevronLeft size={28} />
+          </button>
+
+          <img
+            src={getImageUrl(API_URL, allGalleryImages[lightboxIndex])}
+            alt="Property Fullscreen"
+            className="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl"
+          />
+
+          <button
+            onClick={() =>
+              setLightboxIndex((prev) => (prev + 1) % allGalleryImages.length)
+            }
+            className="absolute right-6 p-3 text-white/80 hover:text-white rounded-full bg-white/10 hover:bg-white/20 transition"
+          >
+            <ChevronRight size={28} />
+          </button>
+        </div>
+      )}
+
+      {/* Hero Showcase */}
+      <div className="max-w-7xl mx-auto px-6 pt-8">
+        {/* Navigation Breadcrumb & Actions */}
+        <div className="flex items-center justify-between py-4">
+          <Link
+            to="/properties"
+            className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition"
+          >
+            <ChevronLeft size={16} />
+            Back to Explore
+          </Link>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
+            >
+              <Share2 size={15} />
+              Share
+            </button>
+            <button
+              onClick={handleToggleFavorite}
+              disabled={favLoading}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-xs ${
+                isFavorite
+                  ? "bg-rose-500 text-white"
+                  : "bg-white border border-slate-200 text-slate-700 hover:text-rose-500 hover:bg-slate-50"
+              }`}
+            >
+              <Heart size={15} className={isFavorite ? "fill-white" : ""} />
+              {isFavorite ? "Saved" : "Save"}
+            </button>
+          </div>
         </div>
 
-      </div>
-    )}
+        {/* Gallery Container */}
+        <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 p-3">
+          {/* Main Selected Image */}
+          <div
+            onClick={() => {
+              setLightboxIndex(allGalleryImages.indexOf(selectedImage));
+              setLightboxOpen(true);
+            }}
+            className="relative h-[360px] sm:h-[480px] md:h-[540px] rounded-2xl overflow-hidden cursor-zoom-in bg-slate-900 group"
+          >
+            <img
+              src={getImageUrl(API_URL, selectedImage)}
+              alt={property.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+            />
+            <div className="absolute top-4 left-4">
+              <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-black/60 text-white backdrop-blur-md border border-white/20">
+                {property.status || "Available"}
+              </span>
+            </div>
+            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-white text-xs font-semibold">
+              Click to Enlarge ({allGalleryImages.length} Photos)
+            </div>
+          </div>
 
-  </div>
+          {/* Thumbnails Row */}
+          {allGalleryImages.length > 1 && (
+            <div className="flex gap-3 overflow-x-auto p-3 mt-1 scrollbar-none">
+              {allGalleryImages.map((img, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setSelectedImage(img)}
+                  className={`w-24 h-18 rounded-xl overflow-hidden flex-shrink-0 border-2 transition ${
+                    selectedImage === img
+                      ? "border-blue-600 shadow-md scale-98"
+                      : "border-transparent opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <img
+                    src={getImageUrl(API_URL, img)}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
-  {similarProperties.length > 0 && (
-    <>
-      <hr className="my-12" />
+        {/* Content Layout: 2 Columns */}
+        <div className="grid lg:grid-cols-3 gap-8 mt-8">
+          {/* Left Column: Property Info & Details */}
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
+                    {property.property_type}
+                  </span>
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+                    {property.title}
+                  </h1>
+                  <p className="text-slate-500 text-sm mt-1.5 flex items-center gap-1.5">
+                    <MapPin size={17} className="text-blue-500" />
+                    <span>{property.city}, Nepal</span>
+                  </p>
+                </div>
 
-      <div className="mt-8">
-        <h2 className="text-3xl font-bold mb-6">
-          🏠 Similar Properties
-        </h2>
+                <div className="text-left sm:text-right">
+                  <p className="text-xs uppercase font-semibold text-slate-400">
+                    Listing Price
+                  </p>
+                  <p className="text-3xl font-black text-blue-600">
+                    Rs. {Number(property.price).toLocaleString()}
+                  </p>
+                </div>
+              </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {similarProperties.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden border hover:shadow-xl transition"
-            >
-              <img
-                src={
-                  item.image
-                    ? getImageUrl(API_URL, item.image)
-                    : "https://placehold.co/600x400?text=No+Image"
-                }
-                alt={item.title}
-                className="w-full h-52 object-cover"
-              />
+              {/* Key Specs Grid */}
+              <div className="grid grid-cols-3 gap-4 mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                <div>
+                  <BedDouble size={22} className="mx-auto text-blue-600 mb-1" />
+                  <p className="text-xs text-slate-400">Bedrooms</p>
+                  <p className="text-base font-bold text-slate-800">
+                    {property.bedrooms} Beds
+                  </p>
+                </div>
+                <div className="border-x border-slate-200">
+                  <Bath size={22} className="mx-auto text-blue-600 mb-1" />
+                  <p className="text-xs text-slate-400">Bathrooms</p>
+                  <p className="text-base font-bold text-slate-800">
+                    {property.bathrooms} Baths
+                  </p>
+                </div>
+                <div>
+                  <Maximize2 size={22} className="mx-auto text-blue-600 mb-1" />
+                  <p className="text-xs text-slate-400">Floor Area</p>
+                  <p className="text-base font-bold text-slate-800">
+                    {property.area} sq.ft
+                  </p>
+                </div>
+              </div>
 
-              <div className="p-5">
-                <h3 className="text-xl font-bold">
-                  {item.title}
-                </h3>
-
-                <p className="text-gray-500">
-                  📍 {item.city}
+              {/* Description */}
+              <div className="mt-8 pt-8 border-t border-slate-100">
+                <h2 className="text-lg font-bold text-slate-900 mb-3">
+                  About This Property
+                </h2>
+                <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+                  {property.description}
                 </p>
-
-                <p className="text-blue-600 font-bold text-xl mt-2">
-                  Rs. {Number(item.price).toLocaleString()}
-                </p>
-
-                <Link
-  to={`/properties/${item.id}`}
-  className="block mt-4 text-center bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
->
-  View Details
-</Link>
               </div>
             </div>
-           ))}
+
+            {/* Mortgage / EMI Calculator Widget */}
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xs">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                  <Calculator size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">
+                    Mortgage & EMI Estimator
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Estimate your monthly payments for this property.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    Down Payment: {downPaymentPercent}%
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="60"
+                    step="5"
+                    value={downPaymentPercent}
+                    onChange={(e) => setDownPaymentPercent(Number(e.target.value))}
+                    className="w-full accent-blue-600"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    Rs. {mortgageCalculation.downPayment.toLocaleString()}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    Tenure: {loanTenureYears} Years
+                  </label>
+                  <input
+                    type="range"
+                    min="5"
+                    max="30"
+                    step="1"
+                    value={loanTenureYears}
+                    onChange={(e) => setLoanTenureYears(Number(e.target.value))}
+                    className="w-full accent-blue-600"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">
+                    {loanTenureYears * 12} Months
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                    Interest Rate: {interestRate}%
+                  </label>
+                  <input
+                    type="range"
+                    min="6"
+                    max="16"
+                    step="0.5"
+                    value={interestRate}
+                    onChange={(e) => setInterestRate(Number(e.target.value))}
+                    className="w-full accent-blue-600"
+                  />
+                  <p className="text-xs text-slate-400 mt-1">Typical Nepal Bank APR</p>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-slate-600">
+                    Estimated Monthly Payment (EMI)
+                  </span>
+                  <p className="text-2xl font-black text-blue-600">
+                    Rs. {mortgageCalculation.emi.toLocaleString()}{" "}
+                    <span className="text-xs font-normal text-slate-500">/ month</span>
+                  </p>
+                </div>
+                <div className="text-right text-xs text-slate-500">
+                  <p>Loan: Rs. {mortgageCalculation.loanAmount.toLocaleString()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Contact & Owner Box */}
+          <div className="space-y-6">
+            {/* Owner & Instant Inquiry Card */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-6">
+              <div className="flex items-center gap-3 pb-6 border-b border-slate-100">
+                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-base">
+                  {property.owner_name ? property.owner_name[0] : <User size={22} />}
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 leading-tight">
+                    {property.owner_name || "Verified Landlord"}
+                  </h3>
+                  <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 mt-1">
+                    <ShieldCheck size={14} />
+                    <span>Verified NestHub Partner</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Reveal Phone Number Button */}
+              {ownerContact ? (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+                  <p className="text-xs font-semibold text-emerald-800">
+                    Owner Direct Phone:
+                  </p>
+                  <p className="text-xl font-bold text-emerald-900 mt-1">
+                    📞 {ownerContact.owner_phone || "Not provided"}
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={handleRevealContact}
+                  disabled={contactLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition shadow-xs"
+                >
+                  <Phone size={16} />
+                  <span>
+                    {contactLoading ? "Retrieving..." : "Show Owner Phone"}
+                  </span>
+                </button>
+              )}
+
+              {/* Instant WhatsApp Button */}
+              <a
+                href={`https://wa.me/?text=${whatsappMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm"
+              >
+                <MessageCircle size={18} />
+                <span>Chat via WhatsApp</span>
+              </a>
+
+              {/* Inquiry Email Form */}
+              <form onSubmit={handleSendInquiry} className="space-y-4 pt-2">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Send Direct Inquiry
+                </label>
+                <textarea
+                  rows="4"
+                  placeholder="Hello, I am interested in this listing and would like to schedule a tour..."
+                  value={inquiryText}
+                  onChange={(e) => setInquiryText(e.target.value)}
+                  className="w-full p-3.5 rounded-2xl border border-slate-200 text-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition resize-none"
+                />
+                <button
+                  type="submit"
+                  disabled={sendingInquiry}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-slate-900 hover:bg-blue-600 text-white font-semibold text-sm transition shadow-xs disabled:opacity-60"
+                >
+                  <Send size={15} />
+                  <span>{sendingInquiry ? "Sending Message..." : "Send Inquiry"}</span>
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
+
+        {/* Similar Properties Section */}
+        {similarProperties.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-slate-200">
+            <h2 className="text-2xl font-black text-slate-900 mb-6">
+              Similar Properties Nearby
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {similarProperties.map((simProp) => (
+                <PropertyCard key={simProp.id} property={simProp} />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-     </>
-     )}
-   </div>
-  </div>
-);
+    </div>
+  );
 }
 
 export default PropertyDetails;
-

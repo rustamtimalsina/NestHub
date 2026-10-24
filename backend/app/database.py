@@ -88,12 +88,6 @@ class ThreadSafeCursor:
 
         return query
 
-    def __init__(self, wrapped_cursor, raw_connection):
-        self._cursor = wrapped_cursor
-        self._raw_connection = raw_connection
-        self._lock = threading.RLock()
-        self._owner = None
-
     def execute(self, query, parameters=()):
         current_thread = threading.get_ident()
 
@@ -135,7 +129,10 @@ class ThreadSafeCursor:
     def release(self):
         if self._owner == threading.get_ident():
             self._owner = None
-            self._lock.release()
+            try:
+                self._lock.release()
+            except RuntimeError:
+                pass
 
 
 # Replace the raw cursor with our compatible cursor

@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -10,7 +13,7 @@ import AddProperty from "./pages/AddProperty";
 import Favorites from "./pages/Favorites";
 import MyProperties from "./pages/MyProperties";
 import Profile from "./pages/Profile";
-import Navbar from "./components/Navbar"; 
+import Navbar from "./components/Navbar";
 import PropertyDetails from "./pages/PropertyDetails";
 import EditProperty from "./pages/EditProperty";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -19,90 +22,111 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminProperties from "./pages/AdminProperties";
 import AdminProtectedRoute from "./AdminProtectedRoute";
 import AdminUsers from "./pages/AdminUsers";
-
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/properties" element={<Properties />} />
-    <Route
-  path="/admin/dashboard"
-  element={
-    <AdminProtectedRoute>
-      <AdminDashboard />
-    </AdminProtectedRoute>
-  }
-/>
+    <AuthProvider>
+      <BrowserRouter>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/properties" element={<Properties />} />
+              <Route path="/properties/:id" element={<PropertyDetails />} />
 
-<Route
-  path="/admin/users"
-  element={
-    <AdminProtectedRoute>
-      <AdminUsers />
-    </AdminProtectedRoute>
-  }
-/>
+              {/* Protected User Routes */}
+              <Route
+                path="/add-property"
+                element={
+                  <ProtectedRoute>
+                    <AddProperty />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/favorites"
+                element={
+                  <ProtectedRoute>
+                    <Favorites />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-properties"
+                element={
+                  <ProtectedRoute>
+                    <MyProperties />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-property/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditProperty />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
 
-<Route
-  path="/admin/properties"
-  element={
-    <AdminProtectedRoute>
-      <AdminProperties />
-    </AdminProtectedRoute>
-  }
-/>
+              {/* Protected Admin Routes */}
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminDashboard />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminUsers />
+                  </AdminProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/properties"
+                element={
+                  <AdminProtectedRoute>
+                    <AdminProperties />
+                  </AdminProtectedRoute>
+                }
+              />
 
-        <Route path="/properties/:id" element={<PropertyDetails />} />
-        <Route
-  path="/add-property"
-  element={
-    <ProtectedRoute>
-      <AddProperty />
-    </ProtectedRoute>
-  }
-/>
-        <Route
-  path="/favorites"
-  element={
-    <ProtectedRoute>
-      <Favorites />
-    </ProtectedRoute>
-  }
-/>
-        <Route
-  path="/my-properties"
-  element={
-    <ProtectedRoute>
-      <MyProperties />
-    </ProtectedRoute>
-  }
-/>
-        <Route
-  path="/edit-property/:id"
-  element={
-    <ProtectedRoute>
-      <EditProperty />
-    </ProtectedRoute>
-  }
-/>
-        <Route
-  path="/profile"
-  element={
-    <ProtectedRoute>
-      <Profile />
-    </ProtectedRoute>
-  }
-/>
-      </Routes>
-      <Footer />
-    </BrowserRouter>
+              {/* 404 Catch All */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+        <ToastContainer
+          position="bottom-right"
+          autoClose={3500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

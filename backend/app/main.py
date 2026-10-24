@@ -87,13 +87,20 @@ def search(city: str):
 # unexpected server errors.  Using ``add_middleware`` only covers errors
 # handled inside the FastAPI app, which causes browsers to hide a 500 response
 # as a misleading CORS error.
+# Dynamic CORS origins configuration
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+custom_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+allowed_origins = custom_origins or [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "https://nest-hub-six.vercel.app",
+    "https://nest-lkrwukzxd-rustam-timalsinas-projects.vercel.app",
+]
+
 app = CORSMiddleware(
     app=app,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://nest-hub-six.vercel.app",
-        "https://nest-lkrwukzxd-rustam-timalsinas-projects.vercel.app",
-    ],
+    allow_origins=allowed_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,49 +1,23 @@
-import { Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import api from "./services/api";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 
 function AdminProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
-
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadUser() {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await api.get("/users/me");
-        setUser(response.data);
-      } catch (error) {
-        console.error("Failed to load user:", error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadUser();
-  }, [token]);
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <p>Checking admin access...</p>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  // Not logged in
-  if (!token || !user) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Logged in but not admin
-  if (user.role !== "admin") {
+  if (!isAdmin) {
     return <Navigate to="/" replace />;
   }
 
