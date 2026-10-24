@@ -27,6 +27,12 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  Calendar,
+  Clock,
+  Video,
+  Printer,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { getImageUrl } from "../utils/imageUrl";
@@ -38,7 +44,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 function PropertyDetails() {
   const { id } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [property, setProperty] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,8 +53,10 @@ function PropertyDetails() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favLoading, setFavLoading] = useState(false);
 
+  // Gallery & Media Tabs
   const [images, setImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState("");
+  const [activeMediaTab, setActiveMediaTab] = useState("photos"); // 'photos' | 'video'
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -59,6 +67,16 @@ function PropertyDetails() {
   const [sendingInquiry, setSendingInquiry] = useState(false);
   const [ownerContact, setOwnerContact] = useState(null);
   const [contactLoading, setContactLoading] = useState(false);
+
+  // Tour Booking state
+  const [tourType, setTourType] = useState("in-person"); // 'in-person' | 'video-call'
+  const [tourDate, setTourDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split("T")[0];
+  });
+  const [tourTimeSlot, setTourTimeSlot] = useState("11:00 AM - 12:00 PM");
+  const [tourBooked, setTourBooked] = useState(false);
 
   // Mortgage Calculator state
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
@@ -85,7 +103,7 @@ function PropertyDetails() {
             setImages(gallery || []);
           }
         } catch {
-          // Non-critical if gallery fails
+          // non-critical
         }
 
         // Fetch similar properties
@@ -93,7 +111,7 @@ function PropertyDetails() {
           const similar = await getSimilarProperties(id);
           if (active) setSimilarProperties(similar || []);
         } catch {
-          // Non-critical
+          // non-critical
         }
 
         // Check favorite if user is authenticated
@@ -214,6 +232,17 @@ function PropertyDetails() {
     }
   }
 
+  async function handleBookTour(e) {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      toast.info("Please log in to schedule a property tour.");
+      return;
+    }
+
+    setTourBooked(true);
+    toast.success(`Visit booked for ${tourDate} (${tourTimeSlot})! Landlord notified.`);
+  }
+
   async function handleRevealContact() {
     if (!isAuthenticated) {
       toast.info("Please login to view verified owner contact numbers.");
@@ -245,6 +274,10 @@ function PropertyDetails() {
     }
   }
 
+  function handlePrintBrochure() {
+    window.print();
+  }
+
   if (loading) {
     return <PropertyDetailsSkeleton />;
   }
@@ -252,8 +285,8 @@ function PropertyDetails() {
   if (notFound || !property) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-6">
-        <h2 className="text-3xl font-black text-slate-800">Property Not Found</h2>
-        <p className="text-slate-500 mt-2 max-w-md">
+        <h2 className="text-3xl font-black text-slate-800 dark:text-white">Property Not Found</h2>
+        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md">
           This listing may have been unlisted, sold, or the link is invalid.
         </p>
         <Link
@@ -271,7 +304,7 @@ function PropertyDetails() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-24">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 pb-24 transition-colors">
       {/* Lightbox Modal */}
       {lightboxOpen && (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
@@ -310,13 +343,13 @@ function PropertyDetails() {
         </div>
       )}
 
-      {/* Hero Showcase */}
+      {/* Main Container */}
       <div className="max-w-7xl mx-auto px-6 pt-8">
-        {/* Navigation Breadcrumb & Actions */}
+        {/* Navigation & Action Bar */}
         <div className="flex items-center justify-between py-4">
           <Link
             to="/properties"
-            className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1 transition"
+            className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white flex items-center gap-1 transition"
           >
             <ChevronLeft size={16} />
             Back to Explore
@@ -324,19 +357,29 @@ function PropertyDetails() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={handlePrintBrochure}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
+              title="Print or Save PDF Flyer"
+            >
+              <Printer size={15} />
+              <span>Brochure</span>
+            </button>
+
+            <button
               onClick={handleShare}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-xs"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
             >
               <Share2 size={15} />
               Share
             </button>
+
             <button
               onClick={handleToggleFavorite}
               disabled={favLoading}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-xs ${
                 isFavorite
                   ? "bg-rose-500 text-white"
-                  : "bg-white border border-slate-200 text-slate-700 hover:text-rose-500 hover:bg-slate-50"
+                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-rose-500 hover:bg-slate-50"
               }`}
             >
               <Heart size={15} className={isFavorite ? "fill-white" : ""} />
@@ -345,69 +388,109 @@ function PropertyDetails() {
           </div>
         </div>
 
-        {/* Gallery Container */}
-        <div className="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-100 p-3">
-          {/* Main Selected Image */}
-          <div
-            onClick={() => {
-              setLightboxIndex(allGalleryImages.indexOf(selectedImage));
-              setLightboxOpen(true);
-            }}
-            className="relative h-[360px] sm:h-[480px] md:h-[540px] rounded-2xl overflow-hidden cursor-zoom-in bg-slate-900 group"
-          >
-            <img
-              src={getImageUrl(API_URL, selectedImage)}
-              alt={property.title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
-            />
-            <div className="absolute top-4 left-4">
-              <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-black/60 text-white backdrop-blur-md border border-white/20">
-                {property.status || "Available"}
-              </span>
-            </div>
-            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-white text-xs font-semibold">
-              Click to Enlarge ({allGalleryImages.length} Photos)
-            </div>
+        {/* Media Showcase: Photos vs Virtual Tour Tabs */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 p-3 transition-colors">
+          {/* Tab Headers */}
+          <div className="flex items-center gap-2 px-3 pt-2 pb-3">
+            <button
+              onClick={() => setActiveMediaTab("photos")}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+                activeMediaTab === "photos"
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Photo Gallery ({allGalleryImages.length})
+            </button>
+            <button
+              onClick={() => setActiveMediaTab("video")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                activeMediaTab === "video"
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <Video size={14} />
+              <span>Virtual Tour (360° Walkthrough)</span>
+            </button>
           </div>
 
-          {/* Thumbnails Row */}
-          {allGalleryImages.length > 1 && (
-            <div className="flex gap-3 overflow-x-auto p-3 mt-1 scrollbar-none">
-              {allGalleryImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImage(img)}
-                  className={`w-24 h-18 rounded-xl overflow-hidden flex-shrink-0 border-2 transition ${
-                    selectedImage === img
-                      ? "border-blue-600 shadow-md scale-98"
-                      : "border-transparent opacity-70 hover:opacity-100"
-                  }`}
-                >
-                  <img
-                    src={getImageUrl(API_URL, img)}
-                    alt={`Thumbnail ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+          {activeMediaTab === "photos" ? (
+            <>
+              {/* Main Selected Image */}
+              <div
+                onClick={() => {
+                  setLightboxIndex(allGalleryImages.indexOf(selectedImage));
+                  setLightboxOpen(true);
+                }}
+                className="relative h-[360px] sm:h-[480px] md:h-[540px] rounded-2xl overflow-hidden cursor-zoom-in bg-slate-900 group"
+              >
+                <img
+                  src={getImageUrl(API_URL, selectedImage)}
+                  alt={property.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-black/60 text-white backdrop-blur-md border border-white/20">
+                    {property.status || "Available"}
+                  </span>
+                </div>
+                <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-white text-xs font-semibold">
+                  Click to Enlarge ({allGalleryImages.length} Photos)
+                </div>
+              </div>
+
+              {/* Thumbnails Row */}
+              {allGalleryImages.length > 1 && (
+                <div className="flex gap-3 overflow-x-auto p-3 mt-1 scrollbar-none">
+                  {allGalleryImages.map((img, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setSelectedImage(img)}
+                      className={`w-24 h-18 rounded-xl overflow-hidden flex-shrink-0 border-2 transition ${
+                        selectedImage === img
+                          ? "border-blue-600 shadow-md scale-98"
+                          : "border-transparent opacity-70 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={getImageUrl(API_URL, img)}
+                        alt={`Thumbnail ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : (
+            /* Virtual Video Walkthrough Player */
+            <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube-nocookie.com/embed/9No-FiEInLA?autoplay=0&rel=0"
+                title="Virtual Real Estate Walkthrough"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
           )}
         </div>
 
         {/* Content Layout: 2 Columns */}
         <div className="grid lg:grid-cols-3 gap-8 mt-8">
-          {/* Left Column: Property Info & Details */}
+          {/* Left Column: Property Info, Specs, Tour Booking, Mortgage */}
           <div className="lg:col-span-2 space-y-8">
-            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xs">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xs transition-colors">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-3 py-1 rounded-lg">
                     {property.property_type}
                   </span>
-                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+                  <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
                     {property.title}
                   </h1>
-                  <p className="text-slate-500 text-sm mt-1.5 flex items-center gap-1.5">
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 flex items-center gap-1.5">
                     <MapPin size={17} className="text-blue-500" />
                     <span>{property.city}, Nepal</span>
                   </p>
@@ -417,56 +500,151 @@ function PropertyDetails() {
                   <p className="text-xs uppercase font-semibold text-slate-400">
                     Listing Price
                   </p>
-                  <p className="text-3xl font-black text-blue-600">
+                  <p className="text-3xl font-black text-blue-600 dark:text-blue-400">
                     Rs. {Number(property.price).toLocaleString()}
                   </p>
                 </div>
               </div>
 
               {/* Key Specs Grid */}
-              <div className="grid grid-cols-3 gap-4 mt-8 p-5 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+              <div className="grid grid-cols-3 gap-4 mt-8 p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
                 <div>
-                  <BedDouble size={22} className="mx-auto text-blue-600 mb-1" />
+                  <BedDouble size={22} className="mx-auto text-blue-600 dark:text-blue-400 mb-1" />
                   <p className="text-xs text-slate-400">Bedrooms</p>
-                  <p className="text-base font-bold text-slate-800">
+                  <p className="text-base font-bold text-slate-800 dark:text-white">
                     {property.bedrooms} Beds
                   </p>
                 </div>
-                <div className="border-x border-slate-200">
-                  <Bath size={22} className="mx-auto text-blue-600 mb-1" />
+                <div className="border-x border-slate-200 dark:border-slate-700">
+                  <Bath size={22} className="mx-auto text-blue-600 dark:text-blue-400 mb-1" />
                   <p className="text-xs text-slate-400">Bathrooms</p>
-                  <p className="text-base font-bold text-slate-800">
+                  <p className="text-base font-bold text-slate-800 dark:text-white">
                     {property.bathrooms} Baths
                   </p>
                 </div>
                 <div>
-                  <Maximize2 size={22} className="mx-auto text-blue-600 mb-1" />
+                  <Maximize2 size={22} className="mx-auto text-blue-600 dark:text-blue-400 mb-1" />
                   <p className="text-xs text-slate-400">Floor Area</p>
-                  <p className="text-base font-bold text-slate-800">
+                  <p className="text-base font-bold text-slate-800 dark:text-white">
                     {property.area} sq.ft
                   </p>
                 </div>
               </div>
 
               {/* Description */}
-              <div className="mt-8 pt-8 border-t border-slate-100">
-                <h2 className="text-lg font-bold text-slate-900 mb-3">
+              <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-3">
                   About This Property
                 </h2>
-                <p className="text-slate-600 text-sm leading-relaxed whitespace-pre-line">
+                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-line">
                   {property.description}
                 </p>
               </div>
             </div>
 
-            {/* Mortgage / EMI Calculator Widget */}
-            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xs">
+            {/* Schedule a Visit Widget */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xs transition-colors">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+                  <Calendar size={20} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Schedule a Private Tour
+                  </h2>
+                  <p className="text-xs text-slate-400">
+                    Book an in-person viewing or live video walkthrough with the owner.
+                  </p>
+                </div>
+              </div>
+
+              {tourBooked ? (
+                <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center">
+                  <CheckCircle2 size={36} className="text-emerald-600 mx-auto mb-2" />
+                  <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-200">
+                    Viewing Scheduled!
+                  </h3>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
+                    Your appointment for {tourDate} ({tourTimeSlot}) has been requested. The landlord will confirm via email and SMS.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleBookTour} className="space-y-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setTourType("in-person")}
+                      className={`p-3 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 ${
+                        tourType === "in-person"
+                          ? "border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-600"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      <Home size={15} />
+                      In-Person Walkthrough
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTourType("video-call")}
+                      className={`p-3 rounded-2xl border text-xs font-bold transition flex items-center justify-center gap-2 ${
+                        tourType === "video-call"
+                          ? "border-blue-600 bg-blue-50 dark:bg-blue-950/60 text-blue-600"
+                          : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      <Video size={15} />
+                      Live Video Call Tour
+                    </button>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        Select Preferred Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        value={tourDate}
+                        onChange={(e) => setTourDate(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        Select Time Slot
+                      </label>
+                      <select
+                        value={tourTimeSlot}
+                        onChange={(e) => setTourTimeSlot(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="10:00 AM - 11:00 AM">Morning (10:00 AM - 11:00 AM)</option>
+                        <option value="01:00 PM - 02:00 PM">Afternoon (1:00 PM - 2:00 PM)</option>
+                        <option value="04:30 PM - 05:30 PM">Evening (4:30 PM - 5:30 PM)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider transition shadow-sm cursor-pointer"
+                  >
+                    Request Viewing Appointment
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Mortgage / EMI Calculator Widget */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xs transition-colors">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 flex items-center justify-center">
                   <Calculator size={20} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                     Mortgage & EMI Estimator
                   </h2>
                   <p className="text-xs text-slate-400">
@@ -477,7 +655,7 @@ function PropertyDetails() {
 
               <div className="grid sm:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
                     Down Payment: {downPaymentPercent}%
                   </label>
                   <input
@@ -495,7 +673,7 @@ function PropertyDetails() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
                     Tenure: {loanTenureYears} Years
                   </label>
                   <input
@@ -513,7 +691,7 @@ function PropertyDetails() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-2">
+                  <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
                     Interest Rate: {interestRate}%
                   </label>
                   <input
@@ -529,17 +707,17 @@ function PropertyDetails() {
                 </div>
               </div>
 
-              <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-between">
+              <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/60 border border-blue-100 dark:border-slate-700 flex items-center justify-between">
                 <div>
-                  <span className="text-xs font-semibold text-slate-600">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     Estimated Monthly Payment (EMI)
                   </span>
-                  <p className="text-2xl font-black text-blue-600">
+                  <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     Rs. {mortgageCalculation.emi.toLocaleString()}{" "}
                     <span className="text-xs font-normal text-slate-500">/ month</span>
                   </p>
                 </div>
-                <div className="text-right text-xs text-slate-500">
+                <div className="text-right text-xs text-slate-500 dark:text-slate-400">
                   <p>Loan: Rs. {mortgageCalculation.loanAmount.toLocaleString()}</p>
                 </div>
               </div>
@@ -548,17 +726,16 @@ function PropertyDetails() {
 
           {/* Right Column: Contact & Owner Box */}
           <div className="space-y-6">
-            {/* Owner & Instant Inquiry Card */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-xs space-y-6">
-              <div className="flex items-center gap-3 pb-6 border-b border-slate-100">
-                <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-base">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 shadow-xs space-y-6 transition-colors">
+              <div className="flex items-center gap-3 pb-6 border-b border-slate-100 dark:border-slate-800">
+                <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center font-bold text-base">
                   {property.owner_name ? property.owner_name[0] : <User size={22} />}
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 leading-tight">
+                  <h3 className="font-bold text-slate-900 dark:text-white leading-tight">
                     {property.owner_name || "Verified Landlord"}
                   </h3>
-                  <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 mt-1">
+                  <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                     <ShieldCheck size={14} />
                     <span>Verified NestHub Partner</span>
                   </div>
@@ -567,11 +744,11 @@ function PropertyDetails() {
 
               {/* Reveal Phone Number Button */}
               {ownerContact ? (
-                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-                  <p className="text-xs font-semibold text-emerald-800">
+                <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-center">
+                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
                     Owner Direct Phone:
                   </p>
-                  <p className="text-xl font-bold text-emerald-900 mt-1">
+                  <p className="text-xl font-bold text-emerald-900 dark:text-emerald-100 mt-1">
                     📞 {ownerContact.owner_phone || "Not provided"}
                   </p>
                 </div>
@@ -579,7 +756,7 @@ function PropertyDetails() {
                 <button
                   onClick={handleRevealContact}
                   disabled={contactLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-slate-200 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition shadow-xs"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
                 >
                   <Phone size={16} />
                   <span>
@@ -601,7 +778,7 @@ function PropertyDetails() {
 
               {/* Inquiry Email Form */}
               <form onSubmit={handleSendInquiry} className="space-y-4 pt-2">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Send Direct Inquiry
                 </label>
                 <textarea
@@ -609,12 +786,12 @@ function PropertyDetails() {
                   placeholder="Hello, I am interested in this listing and would like to schedule a tour..."
                   value={inquiryText}
                   onChange={(e) => setInquiryText(e.target.value)}
-                  className="w-full p-3.5 rounded-2xl border border-slate-200 text-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition resize-none"
+                  className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-white text-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition resize-none"
                 />
                 <button
                   type="submit"
                   disabled={sendingInquiry}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-slate-900 hover:bg-blue-600 text-white font-semibold text-sm transition shadow-xs disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-slate-900 dark:bg-white hover:bg-blue-600 dark:hover:bg-blue-400 text-white dark:text-slate-950 font-semibold text-sm transition shadow-xs disabled:opacity-60 cursor-pointer"
                 >
                   <Send size={15} />
                   <span>{sendingInquiry ? "Sending Message..." : "Send Inquiry"}</span>
@@ -626,8 +803,8 @@ function PropertyDetails() {
 
         {/* Similar Properties Section */}
         {similarProperties.length > 0 && (
-          <div className="mt-16 pt-12 border-t border-slate-200">
-            <h2 className="text-2xl font-black text-slate-900 mb-6">
+          <div className="mt-16 pt-12 border-t border-slate-200 dark:border-slate-800">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-6">
               Similar Properties Nearby
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">

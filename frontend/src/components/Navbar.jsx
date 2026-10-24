@@ -32,7 +32,7 @@ function Navbar() {
     }`;
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-xs transition-all">
+    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-xs">
       <div className="max-w-7xl mx-auto flex justify-between items-center px-6 lg:px-8 h-20">
         {/* Brand Logo */}
         <Link
@@ -130,7 +130,7 @@ function Navbar() {
               </Link>
               <Link
                 to="/register"
-                className="px-5 py-2.5 text-sm font-semibold rounded-2xl bg-slate-900 text-white hover:bg-blue-600 shadow-md shadow-slate-900/10 hover:shadow-lg transition-all"
+                className="px-5 py-2.5 text-sm font-semibold rounded-2xl bg-slate-900 text-white hover:bg-blue-600 shadow-md transition-all"
               >
                 Get Started
               </Link>
@@ -138,14 +138,16 @@ function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle Menu"
-        >
-          {menuOpen ? <X size={26} /> : <Menu size={26} />}
-        </button>
+        {/* Mobile Buttons */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <button
+            className="p-2 rounded-xl text-slate-700"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle Menu"
+          >
+            {menuOpen ? <X size={26} /> : <Menu size={26} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer */}
@@ -154,7 +156,7 @@ function Navbar() {
           <Link
             to="/"
             onClick={() => setMenuOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 transition"
           >
             <House size={20} />
             Home
@@ -163,7 +165,7 @@ function Navbar() {
           <Link
             to="/properties"
             onClick={() => setMenuOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 transition"
           >
             <Compass size={20} />
             Explore Properties
@@ -174,7 +176,7 @@ function Navbar() {
               <Link
                 to="/favorites"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 transition"
               >
                 <Heart size={20} />
                 Favorites
@@ -183,7 +185,7 @@ function Navbar() {
               <Link
                 to="/my-properties"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 hover:text-blue-600 transition"
+                className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 transition"
               >
                 <Building2 size={20} />
                 My Listings
@@ -236,14 +238,14 @@ function Navbar() {
               <Link
                 to="/login"
                 onClick={() => setMenuOpen(false)}
-                className="text-center py-3 rounded-2xl border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition"
+                className="text-center py-3 rounded-2xl border border-slate-200 text-slate-700 font-semibold"
               >
                 Sign In
               </Link>
               <Link
                 to="/register"
                 onClick={() => setMenuOpen(false)}
-                className="text-center py-3 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                className="text-center py-3 rounded-2xl bg-blue-600 text-white font-semibold"
               >
                 Register
               </Link>

@@ -13,7 +13,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  SlidersHorizontal,
   RotateCcw,
 } from "lucide-react";
 
@@ -38,9 +37,7 @@ function Properties() {
   const [cities, setCities] = useState([]);
   const [propertyTypes, setPropertyTypes] = useState([]);
 
-  // Local filter inputs before submitting or applying
   const [keywordInput, setKeywordInput] = useState(keywordParam);
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Load filter options (cities & property types) once
   useEffect(() => {
@@ -100,7 +97,6 @@ function Properties() {
         });
 
         if (active) {
-          // If keyword is specified, filter in memory or title/city match
           let list = result.properties || [];
           if (keywordParam) {
             const kw = keywordParam.toLowerCase();
@@ -151,8 +147,14 @@ function Properties() {
     setSearchParams({});
   };
 
-  const hasActiveFilters =
-    Boolean(keywordParam || cityParam || typeParam || minPriceParam || maxPriceParam || (sortParam && sortParam !== "newest"));
+  const hasActiveFilters = Boolean(
+    keywordParam ||
+      cityParam ||
+      typeParam ||
+      minPriceParam ||
+      maxPriceParam ||
+      (sortParam && sortParam !== "newest")
+  );
 
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20">
@@ -267,7 +269,7 @@ function Properties() {
               )}
             </div>
 
-            {/* Sort Order */}
+            {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-400 font-medium">Sort by:</span>
               <select
@@ -285,9 +287,8 @@ function Properties() {
         </div>
       </div>
 
-      {/* Main Content Grid */}
+      {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-6 mt-8">
-        {/* Results Counter */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Showing {properties.length} of {totalItems} {totalItems === 1 ? "property" : "properties"}
@@ -362,7 +363,9 @@ function Properties() {
             <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-4">
               <Search size={28} />
             </div>
-            <h2 className="text-xl font-bold text-slate-800">No Properties Found</h2>
+            <h2 className="text-xl font-bold text-slate-800">
+              No Properties Found
+            </h2>
             <p className="text-slate-500 text-sm mt-2">
               We couldn't find any property matching your active filters or keyword.
             </p>
