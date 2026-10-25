@@ -107,6 +107,9 @@ function PropertyDetails() {
         const data = await getPropertyById(id);
         if (!active) return;
         setProperty(data);
+        if (data?.title) {
+          document.title = `${data.title} | ${formatNepaliPrice(data.price)} - NestHub`;
+        }
         setSelectedImage(data.image);
 
         // Fetch gallery images

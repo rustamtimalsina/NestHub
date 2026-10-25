@@ -58,6 +58,11 @@ function Navbar() {
             Explore
           </NavLink>
 
+          <NavLink to="/agents" className={navLinkClasses}>
+            <Users size={17} />
+            Advisors
+          </NavLink>
+
           {isAuthenticated && (
             <>
               <NavLink to="/favorites" className={navLinkClasses}>
@@ -169,6 +174,15 @@ function Navbar() {
           >
             <Compass size={20} />
             Explore Properties
+          </Link>
+
+          <Link
+            to="/agents"
+            onClick={() => setMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-700 font-semibold hover:bg-blue-50 transition"
+          >
+            <Users size={20} />
+            Real Estate Advisors
           </Link>
 
           {isAuthenticated ? (

@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import Properties from "./pages/Properties";
+import Agents from "./pages/Agents";
 import AddProperty from "./pages/AddProperty";
 import Favorites from "./pages/Favorites";
 import MyProperties from "./pages/MyProperties";
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/properties" element={<Properties />} />
                 <Route path="/properties/:id" element={<PropertyDetails />} />
+                <Route path="/agents" element={<Agents />} />
 
                 {/* Protected User Routes */}
                 <Route
