@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useCompare } from "../context/CompareContext";
 import { X, ArrowRight, Check, Scale, ExternalLink, Trash2 } from "lucide-react";
 import { getImageUrl } from "../utils/imageUrl";
+import { formatNepaliPrice, sqftToRopani } from "../utils/nepalUnits";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -143,8 +144,13 @@ export function CompareModal() {
                   Price
                 </td>
                 {compareList.map((p) => (
-                  <td key={p.id} className="p-4 font-black text-base text-blue-600 dark:text-blue-400">
-                    Rs. {Number(p.price).toLocaleString()}
+                  <td key={p.id} className="p-4">
+                    <span className="block font-black text-base text-blue-600 dark:text-blue-400">
+                      {formatNepaliPrice(p.price)}
+                    </span>
+                    <span className="text-[10px] text-slate-400 block">
+                      Rs. {Number(p.price).toLocaleString()}
+                    </span>
                   </td>
                 ))}
               </tr>
@@ -202,14 +208,19 @@ export function CompareModal() {
                 ))}
               </tr>
 
-              {/* Row 7: Floor Area */}
+              {/* Row 7: Floor Area & Land Units */}
               <tr className="border-b border-slate-100 dark:border-slate-800">
                 <td className="p-4 font-bold text-xs uppercase tracking-wider text-slate-400">
                   Total Area
                 </td>
                 {compareList.map((p) => (
-                  <td key={p.id} className="p-4 text-xs font-bold text-slate-800 dark:text-slate-200">
-                    {p.area} sq.ft
+                  <td key={p.id} className="p-4">
+                    <span className="block text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {p.area} sq.ft
+                    </span>
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold block">
+                      {sqftToRopani(p.area).label}
+                    </span>
                   </td>
                 ))}
               </tr>

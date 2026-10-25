@@ -15,6 +15,7 @@ import { addFavorite, removeFavorite } from "../services/propertyService";
 import { useAuth } from "../context/AuthContext";
 import { useCompare } from "../context/CompareContext";
 import { toast } from "react-toastify";
+import { formatNepaliPrice, sqftToRopani } from "../utils/nepalUnits";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -139,6 +140,9 @@ function PropertyCard({ property, onFavoriteToggle, initialFavorite = false }) {
         {/* Price Tag in Image Banner */}
         <div className="absolute bottom-3 right-3 text-right">
           <p className="text-lg font-black text-white drop-shadow-md">
+            {formatNepaliPrice(property.price)}
+          </p>
+          <p className="text-[10px] font-semibold text-white/80 drop-shadow">
             Rs. {Number(property.price).toLocaleString()}
           </p>
         </div>
@@ -159,19 +163,30 @@ function PropertyCard({ property, onFavoriteToggle, initialFavorite = false }) {
           </p>
         </div>
 
-        {/* Specs Row */}
-        <div className="grid grid-cols-3 gap-2 py-3 px-3.5 bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-medium">
-          <div className="flex items-center gap-1.5 justify-center">
-            <BedDouble size={16} className="text-slate-400 dark:text-slate-500" />
-            <span>{property.bedrooms} Beds</span>
+        {/* Specs Row with Nepali Area Units */}
+        <div className="grid grid-cols-3 gap-2 py-3 px-3.5 bg-slate-50/80 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800/80 text-slate-600 dark:text-slate-300 text-xs font-medium text-center">
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-200 font-bold">
+              <BedDouble size={14} className="text-blue-500" />
+              <span>{property.bedrooms} Beds</span>
+            </div>
+            <span className="text-[10px] text-slate-400">Rooms</span>
           </div>
-          <div className="flex items-center gap-1.5 justify-center border-x border-slate-200/60 dark:border-slate-700/60">
-            <Bath size={16} className="text-slate-400 dark:text-slate-500" />
-            <span>{property.bathrooms} Baths</span>
+          <div className="flex flex-col items-center justify-center border-x border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-200 font-bold">
+              <Bath size={14} className="text-blue-500" />
+              <span>{property.bathrooms} Baths</span>
+            </div>
+            <span className="text-[10px] text-slate-400">Fitted</span>
           </div>
-          <div className="flex items-center gap-1.5 justify-center">
-            <Maximize2 size={15} className="text-slate-400 dark:text-slate-500" />
-            <span>{property.area} sqft</span>
+          <div className="flex flex-col items-center justify-center">
+            <div className="flex items-center gap-1 text-slate-700 dark:text-slate-200 font-bold">
+              <Maximize2 size={13} className="text-blue-500" />
+              <span>{property.area} sqft</span>
+            </div>
+            <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold truncate max-w-[90px]">
+              {sqftToRopani(property.area).label}
+            </span>
           </div>
         </div>
 

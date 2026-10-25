@@ -40,6 +40,9 @@ import { getImageUrl } from "../utils/imageUrl";
 import { useAuth } from "../context/AuthContext";
 import { PropertyDetailsSkeleton } from "../components/Skeleton";
 import PropertyCard from "../components/PropertyCard";
+import NepalUnitConverter from "../components/NepalUnitConverter";
+import NearbyAmenities from "../components/NearbyAmenities";
+import { formatNepaliPrice, nprToUsd, sqftToRopani } from "../utils/nepalUnits";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -520,14 +523,17 @@ function PropertyDetails() {
                   <p className="text-xs uppercase font-semibold text-slate-400">
                     Listing Price
                   </p>
-                  <p className="text-3xl font-black text-blue-600 dark:text-blue-400">
-                    Rs. {Number(property.price).toLocaleString()}
+                  <p className="text-2xl sm:text-3xl font-black text-blue-600 dark:text-blue-400">
+                    {formatNepaliPrice(property.price)}
+                  </p>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                    Rs. {Number(property.price).toLocaleString()} • ≈ {nprToUsd(property.price)} USD
                   </p>
                 </div>
               </div>
 
-              {/* Key Specs Grid */}
-              <div className="grid grid-cols-3 gap-4 mt-8 p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+              {/* Key Specs Grid (4 Columns with Nepali Land Measure) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
                 <div>
                   <BedDouble size={22} className="mx-auto text-blue-600 dark:text-blue-400 mb-1" />
                   <p className="text-xs text-slate-400">Bedrooms</p>
@@ -535,7 +541,7 @@ function PropertyDetails() {
                     {property.bedrooms} Beds
                   </p>
                 </div>
-                <div className="border-x border-slate-200 dark:border-slate-700">
+                <div className="border-l sm:border-x border-slate-200 dark:border-slate-700">
                   <Bath size={22} className="mx-auto text-blue-600 dark:text-blue-400 mb-1" />
                   <p className="text-xs text-slate-400">Bathrooms</p>
                   <p className="text-base font-bold text-slate-800 dark:text-white">
@@ -547,6 +553,16 @@ function PropertyDetails() {
                   <p className="text-xs text-slate-400">Floor Area</p>
                   <p className="text-base font-bold text-slate-800 dark:text-white">
                     {property.area} sq.ft
+                  </p>
+                </div>
+                <div className="border-l border-slate-200 dark:border-slate-700">
+                  <Home size={22} className="mx-auto text-emerald-600 dark:text-emerald-400 mb-1" />
+                  <p className="text-xs text-slate-400">Land Measure</p>
+                  <p className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+                    {sqftToRopani(property.area).label}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-mono">
+                    ({sqftToRopani(property.area).code})
                   </p>
                 </div>
               </div>
@@ -561,6 +577,18 @@ function PropertyDetails() {
                 </p>
               </div>
             </div>
+
+            {/* Nepal Land Units & Currency Converter */}
+            <NepalUnitConverter
+              initialSqft={property.area}
+              initialPrice={property.price}
+            />
+
+            {/* Neighborhood & Nearby Amenities */}
+            <NearbyAmenities
+              city={property.city}
+              propertyTitle={property.title}
+            />
 
             {/* Schedule a Visit Widget */}
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-xs transition-colors">
