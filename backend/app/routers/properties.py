@@ -566,3 +566,108 @@ def get_owner_contact(
         "owner_name": row["owner_name"],
         "owner_phone": row["owner_phone"],
     }
+
+
+class ReviewCreate(BaseModel):
+    rating: int
+    comment: str
+
+
+class AlertSubscription(BaseModel):
+    email: str
+    city: str | None = None
+    max_price: int | None = None
+    property_type: str | None = None
+
+
+@router.get("/{property_id}/reviews")
+def get_property_reviews(property_id: int):
+    cursor.execute(
+        """
+        SELECT id, property_id, user_name, user_email, rating, comment, created_at
+        FROM property_reviews
+        WHERE property_id = ?
+        ORDER BY id DESC
+        """,
+        (property_id,)
+    )
+    rows = cursor.fetchall()
+    reviews = [dict(r) for r in rows]
+
+    # Mask email for privacy (e.g. j***@gmail.com)
+    for r in reviews:
+        if "@" in r["user_email"]:
+            parts = r["user_email"].split("@")
+            r["user_email"] = f"{parts[0][:2]}***@{parts[1]}"
+
+    count = len(reviews)
+    avg = round(sum(r["rating"] for r in reviews) / count, 1) if count > 0 else 5.0
+
+    return {
+        "reviews": reviews,
+        "count": count,
+        "average_rating": avg,
+    }
+
+
+@router.post("/{property_id}/reviews")
+@limiter.limit("5/hour")
+def add_property_review(
+    request: Request,
+    property_id: int,
+    data: ReviewCreate,
+    current_user: str = Depends(verify_token),
+):
+    if not (1 <= data.rating <= 5):
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5.")
+
+    comment = data.comment.strip()
+    if len(comment) < 3:
+        raise HTTPException(status_code=400, detail="Comment must be at least 3 characters.")
+
+    cursor.execute("SELECT id FROM properties WHERE id = ?", (property_id,))
+    if cursor.fetchone() is None:
+        raise HTTPException(status_code=404, detail="Property not found.")
+
+    cursor.execute("SELECT name FROM users WHERE email = ?", (current_user,))
+    user = cursor.fetchone()
+    user_name = user["name"] if user else "Verified Buyer"
+
+    from datetime import datetime, timezone
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+
+    cursor.execute(
+        """
+        INSERT INTO property_reviews (property_id, user_name, user_email, rating, comment, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (property_id, user_name, current_user, data.rating, comment, now_str)
+    )
+    connection.commit()
+
+    return {"message": "Thank you! Your verified review has been published."}
+
+
+@router.post("/alerts/subscribe")
+@limiter.limit("10/hour")
+async def subscribe_price_alert(
+    request: Request,
+    data: AlertSubscription,
+):
+    email = data.email.strip()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Invalid email address.")
+
+    from datetime import datetime, timezone
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+
+    cursor.execute(
+        """
+        INSERT INTO price_alerts (user_email, city, max_price, property_type, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (email, data.city, data.max_price, data.property_type, now_str)
+    )
+    connection.commit()
+
+    return {"message": f"Alerts activated! You will receive updates at {email}."}

@@ -151,3 +151,33 @@ def test_appointment_booking(client, sent_tokens, monkeypatch):
     assert res.status_code == 200
     assert 'Private tour request sent' in res.json()['message']
     assert len(appointments_sent) >= 1
+
+
+
+def test_reviews_and_alerts(client, sent_tokens):
+    owner, owner_headers = make_user(client, sent_tokens)
+    listing_id = create_listing(client, owner_headers)
+
+    # Empty reviews
+    res = client.get(f'/properties/{listing_id}/reviews')
+    assert res.status_code == 200
+    assert res.json()['count'] == 0
+
+    # Unauthorized post review
+    assert client.post(f'/properties/{listing_id}/reviews', json={'rating': 5, 'comment': 'Nice place'}).status_code == 401
+
+    # Authorized post review
+    visitor, visitor_headers = make_user(client, sent_tokens)
+    res = client.post(f'/properties/{listing_id}/reviews', json={'rating': 5, 'comment': 'Amazing home with peaceful garden'}, headers=visitor_headers)
+    assert res.status_code == 200
+
+    # Fetch reviews
+    res = client.get(f'/properties/{listing_id}/reviews')
+    assert res.status_code == 200
+    assert res.json()['count'] == 1
+    assert res.json()['average_rating'] == 5.0
+
+    # Subscribe to price alert
+    alert_res = client.post('/properties/alerts/subscribe', json={'email': 'buyer@example.com', 'city': 'Kathmandu', 'max_price': 20000000})
+    assert alert_res.status_code == 200
+    assert 'Alerts activated' in alert_res.json()['message']

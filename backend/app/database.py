@@ -278,6 +278,44 @@ cursor.execute(
     """)
 
 
+# ============================================================
+# PROPERTY REVIEWS TABLE
+# ============================================================
+
+cursor.execute(
+    f"""
+    CREATE TABLE IF NOT EXISTS property_reviews (
+        id {ID_COLUMN},
+        property_id INTEGER NOT NULL,
+        user_name TEXT NOT NULL,
+        user_email TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        comment TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """
+)
+
+
+# ============================================================
+# PRICE ALERTS / SAVED SEARCHES TABLE
+# ============================================================
+
+cursor.execute(
+    f"""
+    CREATE TABLE IF NOT EXISTS price_alerts (
+        id {ID_COLUMN},
+        user_email TEXT NOT NULL,
+        city TEXT,
+        max_price INTEGER,
+        property_type TEXT,
+        created_at TEXT NOT NULL
+    )
+    """
+)
+
+
+
 
 # ============================================================
 # ENSURE EXISTING COLUMNS

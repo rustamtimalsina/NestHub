@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import PropertyCard from "../components/PropertyCard";
 import { PropertyCardSkeleton } from "../components/Skeleton";
+import PriceAlertModal from "../components/PriceAlertModal";
 import {
   getProperties,
   getCities,
@@ -14,6 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  Bell,
 } from "lucide-react";
 
 function Properties() {
@@ -36,6 +38,7 @@ function Properties() {
 
   const [cities, setCities] = useState([]);
   const [propertyTypes, setPropertyTypes] = useState([]);
+  const [alertOpen, setAlertOpen] = useState(false);
 
   const [keywordInput, setKeywordInput] = useState(keywordParam);
 
@@ -289,10 +292,18 @@ function Properties() {
 
       {/* Main Content Area */}
       <div className="max-w-7xl mx-auto px-6 mt-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
             Showing {properties.length} of {totalItems} {totalItems === 1 ? "property" : "properties"}
           </p>
+
+          <button
+            onClick={() => setAlertOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition shadow-xs cursor-pointer"
+          >
+            <Bell size={13} />
+            <span>Alert Me for New Listings</span>
+          </button>
         </div>
 
         {loading ? (
@@ -378,6 +389,13 @@ function Properties() {
           </div>
         )}
       </div>
+
+      <PriceAlertModal
+        isOpen={alertOpen}
+        onClose={() => setAlertOpen(false)}
+        defaultCity={cityParam}
+        defaultType={typeParam}
+      />
     </div>
   );
 }

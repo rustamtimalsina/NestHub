@@ -157,3 +157,18 @@ export const getOwnerContact = async (propertyId) => {
   const response = await api.get(`/properties/${propertyId}/contact`);
   return response.data;
 };
+
+export const getPropertyReviews = async (propertyId) => {
+  const response = await api.get(`/properties/${propertyId}/reviews`);
+  return response.data;
+};
+
+export const addPropertyReview = async (propertyId, data) => {
+  const response = await api.post(`/properties/${propertyId}/reviews`, data);
+  return response.data;
+};
+
+export const subscribePriceAlert = async (data) => {
+  const response = await api.post("/properties/alerts/subscribe", data);
+  return response.data;
+};

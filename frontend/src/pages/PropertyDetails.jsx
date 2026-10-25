@@ -34,6 +34,8 @@ import {
   Printer,
   Sparkles,
   CheckCircle2,
+  Bell,
+  Layers,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { getImageUrl } from "../utils/imageUrl";
@@ -42,6 +44,9 @@ import { PropertyDetailsSkeleton } from "../components/Skeleton";
 import PropertyCard from "../components/PropertyCard";
 import NepalUnitConverter from "../components/NepalUnitConverter";
 import NearbyAmenities from "../components/NearbyAmenities";
+import PropertyFloorPlans from "../components/PropertyFloorPlans";
+import PropertyReviews from "../components/PropertyReviews";
+import PriceAlertModal from "../components/PriceAlertModal";
 import { formatNepaliPrice, nprToUsd, sqftToRopani } from "../utils/nepalUnits";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -84,6 +89,7 @@ function PropertyDetails() {
   const [tourNote, setTourNote] = useState("");
   const [tourBooked, setTourBooked] = useState(false);
   const [bookingTour, setBookingTour] = useState(false);
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
 
   // Mortgage Calculator state
   const [downPaymentPercent, setDownPaymentPercent] = useState(20);
@@ -380,6 +386,15 @@ function PropertyDetails() {
 
           <div className="flex items-center gap-2">
             <button
+              onClick={() => setAlertModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
+              title="Get Email Alerts for Price Drops"
+            >
+              <Bell size={15} />
+              <span>Alerts</span>
+            </button>
+
+            <button
               onClick={handlePrintBrochure}
               className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition shadow-xs"
               title="Print or Save PDF Flyer"
@@ -414,7 +429,7 @@ function PropertyDetails() {
         {/* Media Showcase: Photos vs Virtual Tour Tabs */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800 p-3 transition-colors">
           {/* Tab Headers */}
-          <div className="flex items-center gap-2 px-3 pt-2 pb-3">
+          <div className="flex flex-wrap items-center gap-2 px-3 pt-2 pb-3">
             <button
               onClick={() => setActiveMediaTab("photos")}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
@@ -424,6 +439,17 @@ function PropertyDetails() {
               }`}
             >
               Photo Gallery ({allGalleryImages.length})
+            </button>
+            <button
+              onClick={() => setActiveMediaTab("floorplans")}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+                activeMediaTab === "floorplans"
+                  ? "bg-slate-900 dark:bg-white text-white dark:text-slate-950 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              <Layers size={14} />
+              <span>Floor Plans (Blueprint)</span>
             </button>
             <button
               onClick={() => setActiveMediaTab("video")}
@@ -438,7 +464,7 @@ function PropertyDetails() {
             </button>
           </div>
 
-          {activeMediaTab === "photos" ? (
+          {activeMediaTab === "photos" && (
             <>
               {/* Main Selected Image */}
               <div
@@ -486,7 +512,13 @@ function PropertyDetails() {
                 </div>
               )}
             </>
-          ) : (
+          )}
+
+          {activeMediaTab === "floorplans" && (
+            <PropertyFloorPlans property={property} />
+          )}
+
+          {activeMediaTab === "video" && (
             /* Virtual Video Walkthrough Player */
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-950 flex items-center justify-center">
               <iframe
@@ -798,6 +830,9 @@ function PropertyDetails() {
                 </div>
               </div>
             </div>
+
+            {/* Verified Reviews & Ratings */}
+            <PropertyReviews propertyId={property.id} />
           </div>
 
           {/* Right Column: Contact & Owner Box */}
@@ -890,6 +925,14 @@ function PropertyDetails() {
             </div>
           </div>
         )}
+
+        {/* Saved Search & Price Drop Alert Modal */}
+        <PriceAlertModal
+          isOpen={alertModalOpen}
+          onClose={() => setAlertModalOpen(false)}
+          defaultCity={property.city}
+          defaultType={property.property_type}
+        />
       </div>
     </div>
   );
