@@ -12,6 +12,7 @@ import {
   X,
   ShieldCheck,
   Compass,
+   Users, // <-- ADD THIS LINE
 } from "lucide-react";
 
 function Navbar() {
